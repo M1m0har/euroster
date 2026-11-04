@@ -1,0 +1,2429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://accounts.spotify.com https://api.spotify.com; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Euroster">
+<meta name="theme-color" content="#070b2e">
+
+<title>Euroster</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="A private Eurovision song timeline game">
+<style>
+/* Layout: one-column phone app, spotlit stage header, bottom tab bar. Single dark "contest night" look: Eurovision pink on midnight blue, gold for highlights, flag stripes for the heart. */
+:root{
+  color-scheme: dark;
+  --bg:#070b2e; --bg-deep:#040720; --panel:#0f1850; --panel-2:#17236a; --line:#253582;
+  --text:#f4f6ff; --muted:#9ea9da; --pink:#ff1f8e; --violet:#2f5bff; --cyan:#3fd0ff;
+  --flag:#e4002b,#ff8a00,#ffc72c,#00a651,#2f5bff,#ff1f8e;
+  --gold:#ffc72c; --ok:#3be39a; --warn:#ffb020; --bad:#ff6b6b;
+  --font:"Avenir Next","Segoe UI",Roboto,"Helvetica Neue",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.45;min-height:100vh;-webkit-tap-highlight-color:transparent}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(700px 380px at 15% -120px,rgba(255,31,142,.32),transparent 70%),radial-gradient(700px 380px at 85% -120px,rgba(47,91,255,.45),transparent 70%)}
+a{color:var(--cyan)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.wrap{max-width:640px;margin:0 auto;padding-block:12px 110px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;align-items:center;gap:10px;padding:8px 0 14px}
+.heart{width:34px;height:34px;flex:none}
+h1{font-size:22px;margin:0;letter-spacing:.02em;font-weight:800}
+h2{font-size:20px;margin:0 0 6px;text-wrap:balance}
+.tag{font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:var(--gold);color:#241a00;padding:3px 8px;border-radius:99px;font-weight:700}
+.seg{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+.seg span{font-size:12px;color:var(--muted)}
+.seg button{background:transparent;border:1px solid rgba(255,199,44,.45);color:var(--gold);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.seg button.on{background:var(--gold);color:#241a00}
+.banner{background:rgba(255,200,61,.1);border:1px solid rgba(255,200,61,.35);color:var(--gold);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:rgba(11,8,26,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);z-index:10}
+nav button{flex:1;background:none;border:0;color:var(--muted);padding:15px 0 13px;font-weight:600;cursor:pointer;letter-spacing:.02em}
+nav button.on{color:var(--text);box-shadow:inset 0 3px 0 var(--pink)}
+section{display:none}
+section.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.card > b:first-child,.card .head b{font-size:16px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.btn{background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:11px 16px;cursor:pointer;font-weight:600}
+.btn.primary{background:var(--pink);border-color:transparent;box-shadow:0 6px 22px rgba(255,31,142,.3)}
+.btn.danger{border-color:rgba(255,107,107,.5);color:#ffd0d0}
+.btn.ghost{background:none;border-color:transparent;color:var(--muted)}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.5;cursor:default}
+.mini{font-size:12px;padding:6px 10px;border-radius:8px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+label{display:block;font-weight:600;margin:14px 0 6px;font-size:14px}
+label.agree{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:14px}
+label.agree input{margin-top:3px;width:18px;height:18px;flex:none;accent-color:var(--pink)}
+input[type=text],input[type=email],select,textarea{width:100%;background:var(--bg-deep);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{min-height:90px;font-family:var(--mono);font-size:13px}
+code{font-family:var(--mono);background:var(--bg-deep);padding:2px 6px;border-radius:6px;word-break:break-all;font-size:12.5px}
+.status{display:flex;align-items:center;gap:8px;font-size:14px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--warn);flex:none}
+.dot.ok{background:var(--ok)}
+.msg{color:var(--warn);text-align:center;min-height:22px;margin:8px 0}
+#setMsg:empty{display:none}
+.pill{font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--panel-2);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.pill.full{background:rgba(255,176,32,.15);border-color:rgba(255,176,32,.5);color:var(--warn)}
+
+/* Play */
+.stage{display:flex;flex-direction:column;align-items:center;gap:20px;padding:22px 0 8px}
+.bigbtn{width:220px;height:220px;max-width:70vw;max-height:70vw;border-radius:50%;border:0;cursor:pointer;color:#fff;font-size:24px;font-weight:800;letter-spacing:.02em;background:conic-gradient(from 0deg,#e4002b,#ff8a00,#ffc72c,#00a651,#2f5bff,#ff1f8e,#e4002b);box-shadow:0 0 70px rgba(255,31,142,.35),0 0 120px rgba(47,91,255,.3);position:relative}
+.bigbtn::after{content:"";position:absolute;inset:10px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#1b2a7a,var(--bg) 72%)}
+.bigbtn span{position:relative;z-index:1;display:block}
+.bigbtn small{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-top:4px}
+#reader{width:100%;max-width:420px;aspect-ratio:1;border-radius:18px;overflow:hidden;border:2px solid var(--violet);background:#000;position:relative;margin:0 auto}
+#reader video{width:100%;height:100%;object-fit:cover;display:block}
+.fakecam{position:absolute;inset:0;background:repeating-linear-gradient(45deg,#0b1240 0 12px,#0e1749 12px 24px);display:grid;place-items:center}
+.fakecam .frame{width:62%;aspect-ratio:1;border:3px solid rgba(255,255,255,.85);border-radius:14px;position:relative;overflow:hidden}
+.fakecam .scanline{position:absolute;left:0;right:0;height:3px;background:var(--cyan);box-shadow:0 0 14px var(--cyan);animation:scan 1.4s ease-in-out infinite alternate}
+@keyframes scan{from{top:4%}to{top:94%}}
+.eq{display:flex;gap:8px;align-items:flex-end;justify-content:center;height:110px;width:128px;margin:0 auto 6px}
+.eq i{display:block;flex:none;height:40%;width:16px;border-radius:8px;background:linear-gradient(var(--pink),var(--violet));animation:eq 1s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:.2s}.eq i:nth-child(3){animation-delay:.4s}.eq i:nth-child(4){animation-delay:.1s}.eq i:nth-child(5){animation-delay:.3s}
+.eq.paused i{animation-play-state:paused;opacity:.45}
+@keyframes eq{0%,100%{height:20%}50%{height:100%}}
+.mystery{font-size:22px;font-weight:800;text-align:center;margin:0}
+@media (prefers-reduced-motion:reduce){.eq i,.fakecam .scanline{animation:none;height:60%}}
+
+/* Cards tab */
+.songs{list-style:none;padding:0;margin:0}
+.songs li{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}
+.songs li:last-child{border-bottom:0}
+.songs input[type=checkbox]{margin-top:4px;width:18px;height:18px;accent-color:var(--pink);flex:none}
+.songs .meta{flex:1;min-width:0}
+.songs .t{font-weight:700;font-variant-numeric:tabular-nums}
+.songs .m{font-size:13px;color:var(--muted);word-break:break-word;margin-top:2px}
+.songs .m.ok{color:var(--ok)}
+.songs .m.bad{color:var(--warn)}
+.fixbox{display:flex;gap:8px;margin-top:8px}
+.fixbox input{flex:1;min-width:0}
+.progress{height:6px;background:var(--bg-deep);border-radius:3px;overflow:hidden;margin-top:12px}
+.progress div{height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--violet));transition:width .2s}
+.cardprev{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.cardprev .side{display:flex;flex-direction:column;align-items:center;gap:4px}
+.cardprev .side span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cardprev .pc{zoom:.62;border-radius:3mm;border-style:solid;border-color:var(--line)}
+
+/* Players */
+.players{list-style:none;padding:0;margin:12px 0 0}
+.players li{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:10px 0;border-top:1px solid var(--line)}
+.players .acts{display:flex;gap:6px;flex-wrap:wrap;width:100%;padding-left:44px}
+.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;flex:none;background:var(--panel-2);border:1px solid var(--line)}
+.players .who{flex:1;min-width:0}
+.players .who div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.addgrid{display:grid;grid-template-columns:1fr 1.4fr;gap:8px}
+@media (max-width:420px){.addgrid{grid-template-columns:1fr}}
+
+/* Sheets */
+.overlay{position:fixed;inset:0;background:rgba(8,6,20,.82);backdrop-filter:blur(6px);z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:22px 22px 0 0;width:100%;max-width:520px;padding:22px max(18px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));max-height:92vh;overflow:auto}
+@media (min-width:600px){.overlay{align-items:center}.sheet{border-radius:22px}}
+.sheet .heart{width:54px;height:54px;margin-bottom:10px}
+.checks{padding-left:18px;margin:12px 0}
+.checks li{margin:5px 0}
+.terms p{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.terms b{color:var(--text)}
+details summary{cursor:pointer}
+ol.steps{padding-left:20px;margin:10px 0}
+ol.steps li{margin:7px 0;font-size:14px}
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--line);padding:10px 16px;border-radius:12px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:40;max-width:min(90vw,460px);text-align:center;font-size:14px}
+#toast.on{opacity:1}
+
+/* Print */
+#print{display:none}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff !important}
+  body::after{display:none}
+  body>*:not(#print){display:none !important}
+  #print{display:block}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+.page{width:180mm;height:240mm;display:grid;grid-template-columns:repeat(3,60mm);grid-template-rows:repeat(4,60mm);margin:0 auto;break-after:page;page-break-after:always}
+.pc{width:60mm;height:60mm;border:.2mm dashed #c8c8c8;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;font-family:var(--font);position:relative;color:#111}
+.pc.blank{border-color:transparent}
+.pc.front{background:#fff}
+.pc.front .ring{width:50mm;height:50mm;border-radius:50%;background:conic-gradient(from 0deg,#e4002b,#ff8a00,#ffc72c,#00a651,#2f5bff,#ff1f8e,#e4002b);display:grid;place-items:center}
+.pc.front .inner{width:44mm;height:44mm;border-radius:50%;background:#fff;display:grid;place-items:center}
+.pc.front .qr{width:26mm;height:26mm}
+.pc.front .qr svg{width:100%;height:100%;display:block}
+.pc.back{color:#fff;padding:4mm;text-align:center;gap:1.2mm}
+.pc.back .country{font-size:3.2mm;text-transform:uppercase;letter-spacing:.5mm;font-weight:700}
+.pc.back .year{font-size:15mm;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.pc.back .artist{font-size:3.6mm;font-weight:700;line-height:1.15}
+.pc.back .title{font-size:3.6mm;font-style:italic;line-height:1.15}
+.pc.back .place{position:absolute;bottom:3mm;left:0;right:0;font-size:2.8mm;font-weight:700}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="hg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff2d87"/><stop offset=".5" stop-color="#7b3cff"/><stop offset="1" stop-color="#25d9ff"/></linearGradient>
+    <symbol id="heart" viewBox="0 0 32 32"><path fill="url(#hg)" d="M16 29s-12-7.3-12-16a6.6 6.6 0 0 1 12-3.9A6.6 6.6 0 0 1 28 13c0 8.7-12 16-12 16z"/><path fill="#fff" d="M14.5 9.5v8.3a2.6 2.6 0 1 0 1.6 2.4V12.6l4-1.2v-2.6z"/></symbol>
+  </defs>
+</svg>
+<div class="wrap">
+  <header>
+    <svg class="heart" aria-hidden="true"><use href="#heart"/></svg>
+    <h1>Euroster</h1>
+    <span class="tag" id="demoTag" hidden>Preview</span>
+  </header>
+  <div class="banner" id="demoBanner" hidden>Preview mode. Nothing is connected to Spotify and scanning is simulated.
+    <div class="seg" role="group" aria-label="View as"><span>View as</span><button id="asOwner" class="on">Organiser</button><button id="asFriend">Friend</button></div>
+  </div>
+
+  <!-- PLAY -->
+  <section id="tab-play" class="on">
+    <div class="status"><span class="dot" id="connDot"></span><span id="connText">Not connected</span></div>
+    <div class="stage">
+      <div id="st-idle">
+        <button class="bigbtn" id="scanBtn"><span>Scan card<small>Which year? Which country?</small></span></button>
+      </div>
+      <div id="st-scan" hidden style="width:100%;text-align:center">
+        <div id="reader"></div>
+        <p class="muted small">Point the camera at the QR code on the card</p>
+        <button class="btn" id="cancelScan">Cancel</button>
+      </div>
+      <div id="st-play" hidden style="text-align:center">
+        <div class="eq" id="eq"><i></i><i></i><i></i><i></i><i></i></div>
+        <p class="mystery">Mystery song playing</p>
+        <p class="muted small">Place the card on your timeline, then flip it.</p>
+        <div class="row" style="justify-content:center">
+          <button class="btn" id="pauseBtn">Pause</button>
+        </div>
+        <p style="margin-top:18px"><button class="btn primary" id="nextBtn">Scan next card</button></p>
+      </div>
+    </div>
+    <div class="msg" id="playMsg" role="status"></div>
+  </section>
+
+  <!-- CARDS -->
+  <section id="tab-cards">
+    <div class="card">
+      <b>Make the cards</b>
+      <p class="muted small">Match each song to Spotify, check the orange ones by tapping the link to listen, then print. Print double sided, flip on the long edge, and cut along the dashed lines.</p>
+      <div class="row">
+        <button class="btn primary" id="matchBtn">Match on Spotify</button>
+        <button class="btn" id="previewBtn">Preview cards</button>
+        <button class="btn" id="printBtn">Print cards</button>
+      </div>
+      <div class="progress"><div id="prog"></div></div>
+      <p class="small muted" id="cardStats"></p>
+      <div class="cardprev" id="cardPreview" hidden></div>
+    </div>
+    <div class="card">
+      <div class="row between">
+        <b>Songs</b>
+        <div class="row">
+          <button class="btn mini" id="allBtn">Select all</button>
+          <button class="btn mini" id="noneBtn">Select none</button>
+        </div>
+      </div>
+      <ul class="songs" id="songList"></ul>
+    </div>
+    <div class="card">
+      <b>Add your own songs</b>
+      <p class="muted small">One per line: <code>year | country | artist | title | place</code>. Place is optional, use 1 for winners.</p>
+      <textarea id="customSongs" placeholder="2013 | Denmark | Emmelie de Forest | Only Teardrops | 1"></textarea>
+      <p><button class="btn" id="saveCustom">Save songs</button></p>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="tab-settings">
+    <div class="card">
+      <b>Spotify</b>
+      <div class="status" style="margin-top:8px"><span class="dot" id="connDot2"></span><span id="connText2">Not connected</span></div>
+      <details id="ownerSetup" style="margin-top:10px"><summary class="small">Setup steps and Client ID</summary>
+        <ol class="steps">
+          <li>Go to <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">developer.spotify.com/dashboard</a>, create an app and tick <i>Web API</i>.</li>
+          <li>Add this exact Redirect URI to the app:<br><code id="redirectShow"></code> <button class="btn mini" id="copyRedirect">Copy</button></li>
+          <li>Under <i>User Management</i>, add your own Spotify email.</li>
+          <li>Paste the app's Client ID here and connect. Spotify Premium is needed.</li>
+        </ol>
+        <label for="clientId">Spotify Client ID</label>
+        <input type="text" id="clientId" autocomplete="off" spellcheck="false">
+      </details>
+      <label class="agree" style="margin-top:14px"><input type="checkbox" id="agree"> <span>I agree to the privacy note and terms at the bottom of this page.</span></label>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="connectBtn">Connect Spotify</button>
+        <button class="btn danger" id="disconnectBtn">Disconnect</button>
+      </div>
+      <p class="small muted" id="disconnectNote" hidden>Tap again to confirm. This deletes your Spotify login and the cached song matches on this device.</p>
+      <p class="msg" id="setMsg" style="text-align:left"></p>
+      <div id="codeBox" hidden>
+        <label for="codeIn">Got a login code instead of the app?</label>
+        <div class="row" style="flex-wrap:nowrap"><input type="text" id="codeIn" autocomplete="off"><button class="btn" id="codeBtn">Finish</button></div>
+      </div>
+    </div>
+
+    <div class="card" id="playersCard">
+      <div class="row between head"><b>Players</b><span class="pill" id="slotPill">1 of 5 spots</span></div>
+      <p class="muted small">Spotify allows 5 approved accounts per app, yours included. Friends playing at your place don't need a spot, they just use your phone. Approving someone here gives them an invite link; their Spotify email also has to be added under <i>User Management</i> in your <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">dashboard</a>.</p>
+      <label for="ownerName">Your name on invites</label>
+      <input type="text" id="ownerName" placeholder="Your first name">
+      <ul class="players" id="playerList"></ul>
+      <div id="addPlayer">
+        <label for="pName">Approve a friend</label>
+        <div class="addgrid">
+          <input type="text" id="pName" placeholder="Name">
+          <input type="email" id="pEmail" placeholder="Their Spotify email">
+        </div>
+        <p><button class="btn primary" id="pAdd">Approve and get invite link</button></p>
+      </div>
+      <p class="small" id="slotsFull" hidden style="color:var(--warn)">All 5 spots are taken. Others can still play at your place, or set up their own free Spotify key with the <a href="#" id="ownKeyLink">own-key setup link</a>.</p>
+    </div>
+
+    <div class="card">
+      <b>Playback</b>
+      <label for="deviceSel">Play on</label>
+      <div class="row" style="flex-wrap:nowrap">
+        <select id="deviceSel"><option value="">Whichever Spotify device is active</option></select>
+        <button class="btn" id="refreshDev">Refresh</button>
+      </div>
+      <p class="muted small">Tip: play on a speaker, TV or laptop so the scanning phone never shows the song title.</p>
+      <label for="startSel">Start the song</label>
+      <select id="startSel">
+        <option value="0">From the beginning</option>
+        <option value="30">30 seconds in</option>
+        <option value="random">At a random point (20 to 60 s)</option>
+      </select>
+    </div>
+
+    <div class="card" id="demoTools" hidden>
+      <b>Preview the friend experience</b>
+      <p class="muted small">See what a friend sees when they open your invite link.</p>
+      <div class="row"><button class="btn" id="demoInvite">Invite screen</button><button class="btn" id="demoPending">Waiting for approval</button></div>
+    </div>
+
+    <div class="card">
+      <details id="termsDetails"><summary><b>Privacy note and terms</b></summary><div class="terms" style="margin-top:10px" data-terms></div></details>
+    </div>
+    <p class="small muted" style="text-align:center">Euroster is a private fan game. Not affiliated with Spotify, the EBU or the Eurovision Song Contest.</p>
+  </section>
+</div>
+
+<nav>
+  <button data-tab="play" class="on">Play</button>
+  <button data-tab="cards">Cards</button>
+  <button data-tab="settings">Settings</button>
+</nav>
+
+<!-- Friend welcome / approval sheet -->
+<div class="overlay" id="welcome" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="wTitle">
+    <svg class="heart" aria-hidden="true"><use href="#heart"/></svg>
+    <div id="w-invite">
+      <h2 id="wTitle"><span class="fromName">A friend</span> invited you to Euroster</h2>
+      <p class="muted">A Eurovision timeline game. Scan a card, hear the song, guess the year.</p>
+      <ul class="checks small">
+        <li>You need Spotify Premium.</li>
+        <li><span class="fromName">Your friend</span> has to approve your Spotify account first.</li>
+        <li>Nothing leaves your phone except commands to Spotify.</li>
+      </ul>
+      <details style="margin-bottom:12px"><summary class="small">Read the privacy note and terms</summary><div class="terms" style="margin-top:10px" data-terms></div></details>
+      <label class="agree"><input type="checkbox" id="wAgree"> <span>I agree to the privacy note and terms.</span></label>
+      <p style="margin-top:14px"><button class="btn primary wide" id="wConnect">Connect Spotify</button></p>
+    </div>
+    <div id="w-pending" hidden>
+      <h2>Waiting for approval</h2>
+      <p class="muted">Spotify says your account isn't on the guest list yet. Send <span class="fromName">your friend</span> the email you use for Spotify so they can add you.</p>
+      <label for="wEmail">Your Spotify email</label>
+      <input type="email" id="wEmail" placeholder="you@example.com">
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="wRequest">Send request</button>
+        <button class="btn" id="wRetry">I've been approved</button>
+      </div>
+      <p class="small muted" id="wNote"></p>
+    </div>
+    <div id="w-code" hidden>
+      <h2>Almost there</h2>
+      <p class="muted">Spotify sent you back to the browser instead of the Euroster app. Copy this code, open Euroster from your home screen, and paste it under Settings.</p>
+      <p><code id="wCodeShow"></code></p>
+      <button class="btn primary" id="wCopyCode">Copy code</button>
+    </div>
+    <p style="margin-top:10px"><button class="btn ghost" id="wClose">Close</button></p>
+  </div>
+</div>
+<div id="toast" role="status"></div>
+<div id="print"></div>
+
+<script>
+/* QR encoder: Copyright (c) 2009 Kazuhiko Arase, MIT license (via qrcode-terminal 0.12.0) */
+var EurosterQR=(function(){var M={};function require(p){return M[p.replace('./','')];}
+M['QRMode']=(function(){var module={exports:{}};var exports=module.exports;
+module.exports = {
+    MODE_NUMBER :       1 << 0,
+    MODE_ALPHA_NUM :    1 << 1,
+    MODE_8BIT_BYTE :    1 << 2,
+    MODE_KANJI :        1 << 3
+};
+
+return module.exports;})();
+M['QRMath']=(function(){var module={exports:{}};var exports=module.exports;
+var QRMath = {
+
+	glog : function(n) {
+	
+		if (n < 1) {
+			throw new Error("glog(" + n + ")");
+		}
+		
+		return QRMath.LOG_TABLE[n];
+	},
+	
+	gexp : function(n) {
+	
+		while (n < 0) {
+			n += 255;
+		}
+	
+		while (n >= 256) {
+			n -= 255;
+		}
+	
+		return QRMath.EXP_TABLE[n];
+	},
+	
+	EXP_TABLE : new Array(256),
+	
+	LOG_TABLE : new Array(256)
+
+};
+	
+for (var i = 0; i < 8; i++) {
+	QRMath.EXP_TABLE[i] = 1 << i;
+}
+for (var i = 8; i < 256; i++) {
+	QRMath.EXP_TABLE[i] = QRMath.EXP_TABLE[i - 4]
+		^ QRMath.EXP_TABLE[i - 5]
+		^ QRMath.EXP_TABLE[i - 6]
+		^ QRMath.EXP_TABLE[i - 8];
+}
+for (var i = 0; i < 255; i++) {
+	QRMath.LOG_TABLE[QRMath.EXP_TABLE[i] ] = i;
+}
+
+module.exports = QRMath;
+
+return module.exports;})();
+M['QRPolynomial']=(function(){var module={exports:{}};var exports=module.exports;
+var QRMath = require('./QRMath');
+
+function QRPolynomial(num, shift) {
+	if (num.length === undefined) {
+		throw new Error(num.length + "/" + shift);
+	}
+
+	var offset = 0;
+
+	while (offset < num.length && num[offset] === 0) {
+		offset++;
+	}
+
+	this.num = new Array(num.length - offset + shift);
+	for (var i = 0; i < num.length - offset; i++) {
+		this.num[i] = num[i + offset];
+	}
+}
+
+QRPolynomial.prototype = {
+
+	get : function(index) {
+		return this.num[index];
+	},
+	
+	getLength : function() {
+		return this.num.length;
+	},
+	
+	multiply : function(e) {
+	
+		var num = new Array(this.getLength() + e.getLength() - 1);
+	
+		for (var i = 0; i < this.getLength(); i++) {
+			for (var j = 0; j < e.getLength(); j++) {
+				num[i + j] ^= QRMath.gexp(QRMath.glog(this.get(i) ) + QRMath.glog(e.get(j) ) );
+			}
+		}
+	
+		return new QRPolynomial(num, 0);
+	},
+	
+	mod : function(e) {
+	
+		if (this.getLength() - e.getLength() < 0) {
+			return this;
+		}
+	
+		var ratio = QRMath.glog(this.get(0) ) - QRMath.glog(e.get(0) );
+	
+		var num = new Array(this.getLength() );
+		
+		for (var i = 0; i < this.getLength(); i++) {
+			num[i] = this.get(i);
+		}
+		
+		for (var x = 0; x < e.getLength(); x++) {
+			num[x] ^= QRMath.gexp(QRMath.glog(e.get(x) ) + ratio);
+		}
+	
+		// recursive call
+		return new QRPolynomial(num, 0).mod(e);
+	}
+};
+
+module.exports = QRPolynomial;
+
+return module.exports;})();
+M['QRMaskPattern']=(function(){var module={exports:{}};var exports=module.exports;
+module.exports = {
+	PATTERN000 : 0,
+	PATTERN001 : 1,
+	PATTERN010 : 2,
+	PATTERN011 : 3,
+	PATTERN100 : 4,
+	PATTERN101 : 5,
+	PATTERN110 : 6,
+	PATTERN111 : 7
+};
+
+return module.exports;})();
+M['QRErrorCorrectLevel']=(function(){var module={exports:{}};var exports=module.exports;
+module.exports = {
+	L : 1,
+	M : 0,
+	Q : 3,
+	H : 2
+};
+
+
+return module.exports;})();
+M['QR8bitByte']=(function(){var module={exports:{}};var exports=module.exports;
+var QRMode = require('./QRMode');
+
+function QR8bitByte(data) {
+	this.mode = QRMode.MODE_8BIT_BYTE;
+	this.data = data;
+}
+
+QR8bitByte.prototype = {
+
+	getLength : function() {
+		return this.data.length;
+	},
+	
+	write : function(buffer) {
+		for (var i = 0; i < this.data.length; i++) {
+			// not JIS ...
+			buffer.put(this.data.charCodeAt(i), 8);
+		}
+	}
+};
+
+module.exports = QR8bitByte;
+
+return module.exports;})();
+M['QRBitBuffer']=(function(){var module={exports:{}};var exports=module.exports;
+function QRBitBuffer() {
+	this.buffer = [];
+	this.length = 0;
+}
+
+QRBitBuffer.prototype = {
+
+	get : function(index) {
+		var bufIndex = Math.floor(index / 8);
+		return ( (this.buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+	},
+	
+	put : function(num, length) {
+		for (var i = 0; i < length; i++) {
+			this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+		}
+	},
+	
+	getLengthInBits : function() {
+		return this.length;
+	},
+	
+	putBit : function(bit) {
+	
+		var bufIndex = Math.floor(this.length / 8);
+		if (this.buffer.length <= bufIndex) {
+			this.buffer.push(0);
+		}
+	
+		if (bit) {
+			this.buffer[bufIndex] |= (0x80 >>> (this.length % 8) );
+		}
+	
+		this.length++;
+	}
+};
+
+module.exports = QRBitBuffer;
+
+return module.exports;})();
+M['QRRSBlock']=(function(){var module={exports:{}};var exports=module.exports;
+var QRErrorCorrectLevel = require('./QRErrorCorrectLevel');
+
+function QRRSBlock(totalCount, dataCount) {
+	this.totalCount = totalCount;
+	this.dataCount  = dataCount;
+}
+
+QRRSBlock.RS_BLOCK_TABLE = [
+
+	// L
+	// M
+	// Q
+	// H
+
+	// 1
+	[1, 26, 19],
+	[1, 26, 16],
+	[1, 26, 13],
+	[1, 26, 9],
+	
+	// 2
+	[1, 44, 34],
+	[1, 44, 28],
+	[1, 44, 22],
+	[1, 44, 16],
+
+	// 3
+	[1, 70, 55],
+	[1, 70, 44],
+	[2, 35, 17],
+	[2, 35, 13],
+
+	// 4		
+	[1, 100, 80],
+	[2, 50, 32],
+	[2, 50, 24],
+	[4, 25, 9],
+	
+	// 5
+	[1, 134, 108],
+	[2, 67, 43],
+	[2, 33, 15, 2, 34, 16],
+	[2, 33, 11, 2, 34, 12],
+	
+	// 6
+	[2, 86, 68],
+	[4, 43, 27],
+	[4, 43, 19],
+	[4, 43, 15],
+	
+	// 7		
+	[2, 98, 78],
+	[4, 49, 31],
+	[2, 32, 14, 4, 33, 15],
+	[4, 39, 13, 1, 40, 14],
+	
+	// 8
+	[2, 121, 97],
+	[2, 60, 38, 2, 61, 39],
+	[4, 40, 18, 2, 41, 19],
+	[4, 40, 14, 2, 41, 15],
+	
+	// 9
+	[2, 146, 116],
+	[3, 58, 36, 2, 59, 37],
+	[4, 36, 16, 4, 37, 17],
+	[4, 36, 12, 4, 37, 13],
+	
+	// 10		
+	[2, 86, 68, 2, 87, 69],
+	[4, 69, 43, 1, 70, 44],
+	[6, 43, 19, 2, 44, 20],
+	[6, 43, 15, 2, 44, 16],
+
+	// 11
+	[4, 101, 81],
+	[1, 80, 50, 4, 81, 51],
+	[4, 50, 22, 4, 51, 23],
+	[3, 36, 12, 8, 37, 13],
+
+	// 12
+	[2, 116, 92, 2, 117, 93],
+	[6, 58, 36, 2, 59, 37],
+	[4, 46, 20, 6, 47, 21],
+	[7, 42, 14, 4, 43, 15],
+
+	// 13
+	[4, 133, 107],
+	[8, 59, 37, 1, 60, 38],
+	[8, 44, 20, 4, 45, 21],
+	[12, 33, 11, 4, 34, 12],
+
+	// 14
+	[3, 145, 115, 1, 146, 116],
+	[4, 64, 40, 5, 65, 41],
+	[11, 36, 16, 5, 37, 17],
+	[11, 36, 12, 5, 37, 13],
+
+	// 15
+	[5, 109, 87, 1, 110, 88],
+	[5, 65, 41, 5, 66, 42],
+	[5, 54, 24, 7, 55, 25],
+	[11, 36, 12],
+
+	// 16
+	[5, 122, 98, 1, 123, 99],
+	[7, 73, 45, 3, 74, 46],
+	[15, 43, 19, 2, 44, 20],
+	[3, 45, 15, 13, 46, 16],
+
+	// 17
+	[1, 135, 107, 5, 136, 108],
+	[10, 74, 46, 1, 75, 47],
+	[1, 50, 22, 15, 51, 23],
+	[2, 42, 14, 17, 43, 15],
+
+	// 18
+	[5, 150, 120, 1, 151, 121],
+	[9, 69, 43, 4, 70, 44],
+	[17, 50, 22, 1, 51, 23],
+	[2, 42, 14, 19, 43, 15],
+
+	// 19
+	[3, 141, 113, 4, 142, 114],
+	[3, 70, 44, 11, 71, 45],
+	[17, 47, 21, 4, 48, 22],
+	[9, 39, 13, 16, 40, 14],
+
+	// 20
+	[3, 135, 107, 5, 136, 108],
+	[3, 67, 41, 13, 68, 42],
+	[15, 54, 24, 5, 55, 25],
+	[15, 43, 15, 10, 44, 16],
+
+	// 21
+	[4, 144, 116, 4, 145, 117],
+	[17, 68, 42],
+	[17, 50, 22, 6, 51, 23],
+	[19, 46, 16, 6, 47, 17],
+
+	// 22
+	[2, 139, 111, 7, 140, 112],
+	[17, 74, 46],
+	[7, 54, 24, 16, 55, 25],
+	[34, 37, 13],
+
+	// 23
+	[4, 151, 121, 5, 152, 122],
+	[4, 75, 47, 14, 76, 48],
+	[11, 54, 24, 14, 55, 25],
+	[16, 45, 15, 14, 46, 16],
+
+	// 24
+	[6, 147, 117, 4, 148, 118],
+	[6, 73, 45, 14, 74, 46],
+	[11, 54, 24, 16, 55, 25],
+	[30, 46, 16, 2, 47, 17],
+
+	// 25
+	[8, 132, 106, 4, 133, 107],
+	[8, 75, 47, 13, 76, 48],
+	[7, 54, 24, 22, 55, 25],
+	[22, 45, 15, 13, 46, 16],
+
+	// 26
+	[10, 142, 114, 2, 143, 115],
+	[19, 74, 46, 4, 75, 47],
+	[28, 50, 22, 6, 51, 23],
+	[33, 46, 16, 4, 47, 17],
+
+	// 27
+	[8, 152, 122, 4, 153, 123],
+	[22, 73, 45, 3, 74, 46],
+	[8, 53, 23, 26, 54, 24],
+	[12, 45, 15, 28, 46, 16],
+
+	// 28
+	[3, 147, 117, 10, 148, 118],
+	[3, 73, 45, 23, 74, 46],
+	[4, 54, 24, 31, 55, 25],
+	[11, 45, 15, 31, 46, 16],
+
+	// 29
+	[7, 146, 116, 7, 147, 117],
+	[21, 73, 45, 7, 74, 46],
+	[1, 53, 23, 37, 54, 24],
+	[19, 45, 15, 26, 46, 16],
+
+	// 30
+	[5, 145, 115, 10, 146, 116],
+	[19, 75, 47, 10, 76, 48],
+	[15, 54, 24, 25, 55, 25],
+	[23, 45, 15, 25, 46, 16],
+
+	// 31
+	[13, 145, 115, 3, 146, 116],
+	[2, 74, 46, 29, 75, 47],
+	[42, 54, 24, 1, 55, 25],
+	[23, 45, 15, 28, 46, 16],
+
+	// 32
+	[17, 145, 115],
+	[10, 74, 46, 23, 75, 47],
+	[10, 54, 24, 35, 55, 25],
+	[19, 45, 15, 35, 46, 16],
+
+	// 33
+	[17, 145, 115, 1, 146, 116],
+	[14, 74, 46, 21, 75, 47],
+	[29, 54, 24, 19, 55, 25],
+	[11, 45, 15, 46, 46, 16],
+
+	// 34
+	[13, 145, 115, 6, 146, 116],
+	[14, 74, 46, 23, 75, 47],
+	[44, 54, 24, 7, 55, 25],
+	[59, 46, 16, 1, 47, 17],
+
+	// 35
+	[12, 151, 121, 7, 152, 122],
+	[12, 75, 47, 26, 76, 48],
+	[39, 54, 24, 14, 55, 25],
+	[22, 45, 15, 41, 46, 16],
+
+	// 36
+	[6, 151, 121, 14, 152, 122],
+	[6, 75, 47, 34, 76, 48],
+	[46, 54, 24, 10, 55, 25],
+	[2, 45, 15, 64, 46, 16],
+
+	// 37
+	[17, 152, 122, 4, 153, 123],
+	[29, 74, 46, 14, 75, 47],
+	[49, 54, 24, 10, 55, 25],
+	[24, 45, 15, 46, 46, 16],
+
+	// 38
+	[4, 152, 122, 18, 153, 123],
+	[13, 74, 46, 32, 75, 47],
+	[48, 54, 24, 14, 55, 25],
+	[42, 45, 15, 32, 46, 16],
+
+	// 39
+	[20, 147, 117, 4, 148, 118],
+	[40, 75, 47, 7, 76, 48],
+	[43, 54, 24, 22, 55, 25],
+	[10, 45, 15, 67, 46, 16],
+
+	// 40
+	[19, 148, 118, 6, 149, 119],
+	[18, 75, 47, 31, 76, 48],
+	[34, 54, 24, 34, 55, 25],
+	[20, 45, 15, 61, 46, 16]
+];
+
+QRRSBlock.getRSBlocks = function(typeNumber, errorCorrectLevel) {
+	
+	var rsBlock = QRRSBlock.getRsBlockTable(typeNumber, errorCorrectLevel);
+	
+	if (rsBlock === undefined) {
+		throw new Error("bad rs block @ typeNumber:" + typeNumber + "/errorCorrectLevel:" + errorCorrectLevel);
+	}
+
+	var length = rsBlock.length / 3;
+	
+	var list = [];
+	
+	for (var i = 0; i < length; i++) {
+
+		var count = rsBlock[i * 3 + 0];
+		var totalCount = rsBlock[i * 3 + 1];
+		var dataCount  = rsBlock[i * 3 + 2];
+
+		for (var j = 0; j < count; j++) {
+			list.push(new QRRSBlock(totalCount, dataCount) );	
+		}
+	}
+	
+	return list;
+};
+
+QRRSBlock.getRsBlockTable = function(typeNumber, errorCorrectLevel) {
+
+	switch(errorCorrectLevel) {
+	case QRErrorCorrectLevel.L :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+	case QRErrorCorrectLevel.M :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+	case QRErrorCorrectLevel.Q :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+	case QRErrorCorrectLevel.H :
+		return QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+	default :
+		return undefined;
+	}
+};
+
+module.exports = QRRSBlock;
+
+return module.exports;})();
+M['QRUtil']=(function(){var module={exports:{}};var exports=module.exports;
+var QRMode = require('./QRMode');
+var QRPolynomial = require('./QRPolynomial');
+var QRMath = require('./QRMath');
+var QRMaskPattern = require('./QRMaskPattern');
+
+var QRUtil = {
+
+    PATTERN_POSITION_TABLE : [
+        [],
+        [6, 18],
+        [6, 22],
+        [6, 26],
+        [6, 30],
+        [6, 34],
+        [6, 22, 38],
+        [6, 24, 42],
+        [6, 26, 46],
+        [6, 28, 50],
+        [6, 30, 54],        
+        [6, 32, 58],
+        [6, 34, 62],
+        [6, 26, 46, 66],
+        [6, 26, 48, 70],
+        [6, 26, 50, 74],
+        [6, 30, 54, 78],
+        [6, 30, 56, 82],
+        [6, 30, 58, 86],
+        [6, 34, 62, 90],
+        [6, 28, 50, 72, 94],
+        [6, 26, 50, 74, 98],
+        [6, 30, 54, 78, 102],
+        [6, 28, 54, 80, 106],
+        [6, 32, 58, 84, 110],
+        [6, 30, 58, 86, 114],
+        [6, 34, 62, 90, 118],
+        [6, 26, 50, 74, 98, 122],
+        [6, 30, 54, 78, 102, 126],
+        [6, 26, 52, 78, 104, 130],
+        [6, 30, 56, 82, 108, 134],
+        [6, 34, 60, 86, 112, 138],
+        [6, 30, 58, 86, 114, 142],
+        [6, 34, 62, 90, 118, 146],
+        [6, 30, 54, 78, 102, 126, 150],
+        [6, 24, 50, 76, 102, 128, 154],
+        [6, 28, 54, 80, 106, 132, 158],
+        [6, 32, 58, 84, 110, 136, 162],
+        [6, 26, 54, 82, 110, 138, 166],
+        [6, 30, 58, 86, 114, 142, 170]
+    ],
+
+    G15 : (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0),
+    G18 : (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0),
+    G15_MASK : (1 << 14) | (1 << 12) | (1 << 10)    | (1 << 4) | (1 << 1),
+
+    getBCHTypeInfo : function(data) {
+        var d = data << 10;
+        while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15) >= 0) {
+            d ^= (QRUtil.G15 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15) ) );    
+        }
+        return ( (data << 10) | d) ^ QRUtil.G15_MASK;
+    },
+
+    getBCHTypeNumber : function(data) {
+        var d = data << 12;
+        while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18) >= 0) {
+            d ^= (QRUtil.G18 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18) ) );    
+        }
+        return (data << 12) | d;
+    },
+
+    getBCHDigit : function(data) {
+
+        var digit = 0;
+
+        while (data !== 0) {
+            digit++;
+            data >>>= 1;
+        }
+
+        return digit;
+    },
+
+    getPatternPosition : function(typeNumber) {
+        return QRUtil.PATTERN_POSITION_TABLE[typeNumber - 1];
+    },
+
+    getMask : function(maskPattern, i, j) {
+        
+        switch (maskPattern) {
+            
+        case QRMaskPattern.PATTERN000 : return (i + j) % 2 === 0;
+        case QRMaskPattern.PATTERN001 : return i % 2 === 0;
+        case QRMaskPattern.PATTERN010 : return j % 3 === 0;
+        case QRMaskPattern.PATTERN011 : return (i + j) % 3 === 0;
+        case QRMaskPattern.PATTERN100 : return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 === 0;
+        case QRMaskPattern.PATTERN101 : return (i * j) % 2 + (i * j) % 3 === 0;
+        case QRMaskPattern.PATTERN110 : return ( (i * j) % 2 + (i * j) % 3) % 2 === 0;
+        case QRMaskPattern.PATTERN111 : return ( (i * j) % 3 + (i + j) % 2) % 2 === 0;
+
+        default :
+            throw new Error("bad maskPattern:" + maskPattern);
+        }
+    },
+
+    getErrorCorrectPolynomial : function(errorCorrectLength) {
+
+        var a = new QRPolynomial([1], 0);
+
+        for (var i = 0; i < errorCorrectLength; i++) {
+            a = a.multiply(new QRPolynomial([1, QRMath.gexp(i)], 0) );
+        }
+
+        return a;
+    },
+
+    getLengthInBits : function(mode, type) {
+
+        if (1 <= type && type < 10) {
+
+            // 1 - 9
+
+            switch(mode) {
+            case QRMode.MODE_NUMBER     : return 10;
+            case QRMode.MODE_ALPHA_NUM  : return 9;
+            case QRMode.MODE_8BIT_BYTE  : return 8;
+            case QRMode.MODE_KANJI      : return 8;
+            default :
+                throw new Error("mode:" + mode);
+            }
+
+        } else if (type < 27) {
+
+            // 10 - 26
+
+            switch(mode) {
+            case QRMode.MODE_NUMBER     : return 12;
+            case QRMode.MODE_ALPHA_NUM  : return 11;
+            case QRMode.MODE_8BIT_BYTE  : return 16;
+            case QRMode.MODE_KANJI      : return 10;
+            default :
+                throw new Error("mode:" + mode);
+            }
+
+        } else if (type < 41) {
+
+            // 27 - 40
+
+            switch(mode) {
+            case QRMode.MODE_NUMBER     : return 14;
+            case QRMode.MODE_ALPHA_NUM  : return 13;
+            case QRMode.MODE_8BIT_BYTE  : return 16;
+            case QRMode.MODE_KANJI      : return 12;
+            default :
+                throw new Error("mode:" + mode);
+            }
+
+        } else {
+            throw new Error("type:" + type);
+        }
+    },
+
+    getLostPoint : function(qrCode) {
+        
+        var moduleCount = qrCode.getModuleCount();
+        var lostPoint = 0;
+        var row = 0; 
+        var col = 0;
+
+        
+        // LEVEL1
+        
+        for (row = 0; row < moduleCount; row++) {
+
+            for (col = 0; col < moduleCount; col++) {
+
+                var sameCount = 0;
+                var dark = qrCode.isDark(row, col);
+
+                for (var r = -1; r <= 1; r++) {
+
+                    if (row + r < 0 || moduleCount <= row + r) {
+                        continue;
+                    }
+
+                    for (var c = -1; c <= 1; c++) {
+
+                        if (col + c < 0 || moduleCount <= col + c) {
+                            continue;
+                        }
+
+                        if (r === 0 && c === 0) {
+                            continue;
+                        }
+
+                        if (dark === qrCode.isDark(row + r, col + c) ) {
+                            sameCount++;
+                        }
+                    }
+                }
+
+                if (sameCount > 5) {
+                    lostPoint += (3 + sameCount - 5);
+                }
+            }
+        }
+
+        // LEVEL2
+
+        for (row = 0; row < moduleCount - 1; row++) {
+            for (col = 0; col < moduleCount - 1; col++) {
+                var count = 0;
+                if (qrCode.isDark(row,     col    ) ) count++;
+                if (qrCode.isDark(row + 1, col    ) ) count++;
+                if (qrCode.isDark(row,     col + 1) ) count++;
+                if (qrCode.isDark(row + 1, col + 1) ) count++;
+                if (count === 0 || count === 4) {
+                    lostPoint += 3;
+                }
+            }
+        }
+
+        // LEVEL3
+
+        for (row = 0; row < moduleCount; row++) {
+            for (col = 0; col < moduleCount - 6; col++) {
+                if (qrCode.isDark(row, col) && 
+                        !qrCode.isDark(row, col + 1) && 
+                         qrCode.isDark(row, col + 2) && 
+                         qrCode.isDark(row, col + 3) && 
+                         qrCode.isDark(row, col + 4) && 
+                        !qrCode.isDark(row, col + 5) && 
+                         qrCode.isDark(row, col + 6) ) {
+                    lostPoint += 40;
+                }
+            }
+        }
+
+        for (col = 0; col < moduleCount; col++) {
+            for (row = 0; row < moduleCount - 6; row++) {
+                if (qrCode.isDark(row, col) &&
+                        !qrCode.isDark(row + 1, col) &&
+                         qrCode.isDark(row + 2, col) &&
+                         qrCode.isDark(row + 3, col) &&
+                         qrCode.isDark(row + 4, col) &&
+                        !qrCode.isDark(row + 5, col) &&
+                         qrCode.isDark(row + 6, col) ) {
+                    lostPoint += 40;
+                }
+            }
+        }
+
+        // LEVEL4
+        
+        var darkCount = 0;
+
+        for (col = 0; col < moduleCount; col++) {
+            for (row = 0; row < moduleCount; row++) {
+                if (qrCode.isDark(row, col) ) {
+                    darkCount++;
+                }
+            }
+        }
+        
+        var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+        lostPoint += ratio * 10;
+
+        return lostPoint;       
+    }
+
+};
+
+module.exports = QRUtil;
+
+return module.exports;})();
+M['index']=(function(){var module={exports:{}};var exports=module.exports;
+//---------------------------------------------------------------------
+// QRCode for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//   http://www.opensource.org/licenses/mit-license.php
+//
+// The word "QR Code" is registered trademark of 
+// DENSO WAVE INCORPORATED
+//   http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+// Modified to work in node for this project (and some refactoring)
+//---------------------------------------------------------------------
+
+var QR8bitByte = require('./QR8bitByte');
+var QRUtil = require('./QRUtil');
+var QRPolynomial = require('./QRPolynomial');
+var QRRSBlock = require('./QRRSBlock');
+var QRBitBuffer = require('./QRBitBuffer');
+
+function QRCode(typeNumber, errorCorrectLevel) {
+	this.typeNumber = typeNumber;
+	this.errorCorrectLevel = errorCorrectLevel;
+	this.modules = null;
+	this.moduleCount = 0;
+	this.dataCache = null;
+	this.dataList = [];
+}
+
+QRCode.prototype = {
+	
+	addData : function(data) {
+		var newData = new QR8bitByte(data);
+		this.dataList.push(newData);
+		this.dataCache = null;
+	},
+	
+	isDark : function(row, col) {
+		if (row < 0 || this.moduleCount <= row || col < 0 || this.moduleCount <= col) {
+			throw new Error(row + "," + col);
+		}
+		return this.modules[row][col];
+	},
+
+	getModuleCount : function() {
+		return this.moduleCount;
+	},
+	
+	make : function() {
+		// Calculate automatically typeNumber if provided is < 1
+		if (this.typeNumber < 1 ){
+			var typeNumber = 1;
+			for (typeNumber = 1; typeNumber < 40; typeNumber++) {
+				var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, this.errorCorrectLevel);
+
+				var buffer = new QRBitBuffer();
+				var totalDataCount = 0;
+				for (var i = 0; i < rsBlocks.length; i++) {
+					totalDataCount += rsBlocks[i].dataCount;
+				}
+
+				for (var x = 0; x < this.dataList.length; x++) {
+					var data = this.dataList[x];
+					buffer.put(data.mode, 4);
+					buffer.put(data.getLength(), QRUtil.getLengthInBits(data.mode, typeNumber) );
+					data.write(buffer);
+				}
+				if (buffer.getLengthInBits() <= totalDataCount * 8)
+					break;
+			}
+			this.typeNumber = typeNumber;
+		}
+		this.makeImpl(false, this.getBestMaskPattern() );
+	},
+	
+	makeImpl : function(test, maskPattern) {
+		
+		this.moduleCount = this.typeNumber * 4 + 17;
+		this.modules = new Array(this.moduleCount);
+		
+		for (var row = 0; row < this.moduleCount; row++) {
+			
+			this.modules[row] = new Array(this.moduleCount);
+			
+			for (var col = 0; col < this.moduleCount; col++) {
+				this.modules[row][col] = null;//(col + row) % 3;
+			}
+		}
+	
+		this.setupPositionProbePattern(0, 0);
+		this.setupPositionProbePattern(this.moduleCount - 7, 0);
+		this.setupPositionProbePattern(0, this.moduleCount - 7);
+		this.setupPositionAdjustPattern();
+		this.setupTimingPattern();
+		this.setupTypeInfo(test, maskPattern);
+		
+		if (this.typeNumber >= 7) {
+			this.setupTypeNumber(test);
+		}
+	
+		if (this.dataCache === null) {
+			this.dataCache = QRCode.createData(this.typeNumber, this.errorCorrectLevel, this.dataList);
+		}
+	
+		this.mapData(this.dataCache, maskPattern);
+	},
+
+	setupPositionProbePattern : function(row, col)  {
+		
+		for (var r = -1; r <= 7; r++) {
+			
+			if (row + r <= -1 || this.moduleCount <= row + r) continue;
+			
+			for (var c = -1; c <= 7; c++) {
+				
+				if (col + c <= -1 || this.moduleCount <= col + c) continue;
+				
+				if ( (0 <= r && r <= 6 && (c === 0 || c === 6) ) || 
+                     (0 <= c && c <= 6 && (r === 0 || r === 6) ) || 
+                     (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+					this.modules[row + r][col + c] = true;
+				} else {
+					this.modules[row + r][col + c] = false;
+				}
+			}		
+		}		
+	},
+	
+	getBestMaskPattern : function() {
+	
+		var minLostPoint = 0;
+		var pattern = 0;
+	
+		for (var i = 0; i < 8; i++) {
+			
+			this.makeImpl(true, i);
+	
+			var lostPoint = QRUtil.getLostPoint(this);
+	
+			if (i === 0 || minLostPoint >  lostPoint) {
+				minLostPoint = lostPoint;
+				pattern = i;
+			}
+		}
+	
+		return pattern;
+	},
+	
+	createMovieClip : function(target_mc, instance_name, depth) {
+	
+		var qr_mc = target_mc.createEmptyMovieClip(instance_name, depth);
+		var cs = 1;
+	
+		this.make();
+
+		for (var row = 0; row < this.modules.length; row++) {
+			
+			var y = row * cs;
+			
+			for (var col = 0; col < this.modules[row].length; col++) {
+	
+				var x = col * cs;
+				var dark = this.modules[row][col];
+			
+				if (dark) {
+					qr_mc.beginFill(0, 100);
+					qr_mc.moveTo(x, y);
+					qr_mc.lineTo(x + cs, y);
+					qr_mc.lineTo(x + cs, y + cs);
+					qr_mc.lineTo(x, y + cs);
+					qr_mc.endFill();
+				}
+			}
+		}
+		
+		return qr_mc;
+	},
+
+	setupTimingPattern : function() {
+		
+		for (var r = 8; r < this.moduleCount - 8; r++) {
+			if (this.modules[r][6] !== null) {
+				continue;
+			}
+			this.modules[r][6] = (r % 2 === 0);
+		}
+	
+		for (var c = 8; c < this.moduleCount - 8; c++) {
+			if (this.modules[6][c] !== null) {
+				continue;
+			}
+			this.modules[6][c] = (c % 2 === 0);
+		}
+	},
+	
+	setupPositionAdjustPattern : function() {
+	
+		var pos = QRUtil.getPatternPosition(this.typeNumber);
+		
+		for (var i = 0; i < pos.length; i++) {
+		
+			for (var j = 0; j < pos.length; j++) {
+			
+				var row = pos[i];
+				var col = pos[j];
+				
+				if (this.modules[row][col] !== null) {
+					continue;
+				}
+				
+				for (var r = -2; r <= 2; r++) {
+				
+					for (var c = -2; c <= 2; c++) {
+					
+						if (Math.abs(r) === 2 || 
+                            Math.abs(c) === 2 ||
+                            (r === 0 && c === 0) ) {
+							this.modules[row + r][col + c] = true;
+						} else {
+							this.modules[row + r][col + c] = false;
+						}
+					}
+				}
+			}
+		}
+	},
+	
+	setupTypeNumber : function(test) {
+	
+		var bits = QRUtil.getBCHTypeNumber(this.typeNumber);
+        var mod;
+	
+		for (var i = 0; i < 18; i++) {
+			mod = (!test && ( (bits >> i) & 1) === 1);
+			this.modules[Math.floor(i / 3)][i % 3 + this.moduleCount - 8 - 3] = mod;
+		}
+	
+		for (var x = 0; x < 18; x++) {
+			mod = (!test && ( (bits >> x) & 1) === 1);
+			this.modules[x % 3 + this.moduleCount - 8 - 3][Math.floor(x / 3)] = mod;
+		}
+	},
+	
+	setupTypeInfo : function(test, maskPattern) {
+	
+		var data = (this.errorCorrectLevel << 3) | maskPattern;
+		var bits = QRUtil.getBCHTypeInfo(data);
+        var mod;
+	
+		// vertical		
+		for (var v = 0; v < 15; v++) {
+	
+			mod = (!test && ( (bits >> v) & 1) === 1);
+	
+			if (v < 6) {
+				this.modules[v][8] = mod;
+			} else if (v < 8) {
+				this.modules[v + 1][8] = mod;
+			} else {
+				this.modules[this.moduleCount - 15 + v][8] = mod;
+			}
+		}
+	
+		// horizontal
+		for (var h = 0; h < 15; h++) {
+	
+			mod = (!test && ( (bits >> h) & 1) === 1);
+			
+			if (h < 8) {
+				this.modules[8][this.moduleCount - h - 1] = mod;
+			} else if (h < 9) {
+				this.modules[8][15 - h - 1 + 1] = mod;
+			} else {
+				this.modules[8][15 - h - 1] = mod;
+			}
+		}
+	
+		// fixed module
+		this.modules[this.moduleCount - 8][8] = (!test);
+	
+	},
+	
+	mapData : function(data, maskPattern) {
+		
+		var inc = -1;
+		var row = this.moduleCount - 1;
+		var bitIndex = 7;
+		var byteIndex = 0;
+		
+		for (var col = this.moduleCount - 1; col > 0; col -= 2) {
+	
+			if (col === 6) col--;
+	
+			while (true) {
+	
+				for (var c = 0; c < 2; c++) {
+					
+					if (this.modules[row][col - c] === null) {
+						
+						var dark = false;
+	
+						if (byteIndex < data.length) {
+							dark = ( ( (data[byteIndex] >>> bitIndex) & 1) === 1);
+						}
+	
+						var mask = QRUtil.getMask(maskPattern, row, col - c);
+	
+						if (mask) {
+							dark = !dark;
+						}
+						
+						this.modules[row][col - c] = dark;
+						bitIndex--;
+	
+						if (bitIndex === -1) {
+							byteIndex++;
+							bitIndex = 7;
+						}
+					}
+				}
+								
+				row += inc;
+	
+				if (row < 0 || this.moduleCount <= row) {
+					row -= inc;
+					inc = -inc;
+					break;
+				}
+			}
+		}
+		
+	}
+
+};
+
+QRCode.PAD0 = 0xEC;
+QRCode.PAD1 = 0x11;
+
+QRCode.createData = function(typeNumber, errorCorrectLevel, dataList) {
+	
+	var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
+	
+	var buffer = new QRBitBuffer();
+	
+	for (var i = 0; i < dataList.length; i++) {
+		var data = dataList[i];
+		buffer.put(data.mode, 4);
+		buffer.put(data.getLength(), QRUtil.getLengthInBits(data.mode, typeNumber) );
+		data.write(buffer);
+	}
+
+	// calc num max data.
+	var totalDataCount = 0;
+	for (var x = 0; x < rsBlocks.length; x++) {
+		totalDataCount += rsBlocks[x].dataCount;
+	}
+
+	if (buffer.getLengthInBits() > totalDataCount * 8) {
+		throw new Error("code length overflow. (" + 
+            buffer.getLengthInBits() + 
+            ">" +  
+            totalDataCount * 8 + 
+            ")");
+	}
+
+	// end code
+	if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+		buffer.put(0, 4);
+	}
+
+	// padding
+	while (buffer.getLengthInBits() % 8 !== 0) {
+		buffer.putBit(false);
+	}
+
+	// padding
+	while (true) {
+		
+		if (buffer.getLengthInBits() >= totalDataCount * 8) {
+			break;
+		}
+		buffer.put(QRCode.PAD0, 8);
+		
+		if (buffer.getLengthInBits() >= totalDataCount * 8) {
+			break;
+		}
+		buffer.put(QRCode.PAD1, 8);
+	}
+
+	return QRCode.createBytes(buffer, rsBlocks);
+};
+
+QRCode.createBytes = function(buffer, rsBlocks) {
+
+	var offset = 0;
+	
+	var maxDcCount = 0;
+	var maxEcCount = 0;
+	
+	var dcdata = new Array(rsBlocks.length);
+	var ecdata = new Array(rsBlocks.length);
+	
+	for (var r = 0; r < rsBlocks.length; r++) {
+
+		var dcCount = rsBlocks[r].dataCount;
+		var ecCount = rsBlocks[r].totalCount - dcCount;
+
+		maxDcCount = Math.max(maxDcCount, dcCount);
+		maxEcCount = Math.max(maxEcCount, ecCount);
+		
+		dcdata[r] = new Array(dcCount);
+		
+		for (var i = 0; i < dcdata[r].length; i++) {
+			dcdata[r][i] = 0xff & buffer.buffer[i + offset];
+		}
+		offset += dcCount;
+		
+		var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+		var rawPoly = new QRPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+		var modPoly = rawPoly.mod(rsPoly);
+		ecdata[r] = new Array(rsPoly.getLength() - 1);
+		for (var x = 0; x < ecdata[r].length; x++) {
+            var modIndex = x + modPoly.getLength() - ecdata[r].length;
+			ecdata[r][x] = (modIndex >= 0)? modPoly.get(modIndex) : 0;
+		}
+
+	}
+	
+	var totalCodeCount = 0;
+	for (var y = 0; y < rsBlocks.length; y++) {
+		totalCodeCount += rsBlocks[y].totalCount;
+	}
+
+	var data = new Array(totalCodeCount);
+	var index = 0;
+
+	for (var z = 0; z < maxDcCount; z++) {
+		for (var s = 0; s < rsBlocks.length; s++) {
+			if (z < dcdata[s].length) {
+				data[index++] = dcdata[s][z];
+			}
+		}
+	}
+
+	for (var xx = 0; xx < maxEcCount; xx++) {
+		for (var t = 0; t < rsBlocks.length; t++) {
+			if (xx < ecdata[t].length) {
+				data[index++] = ecdata[t][xx];
+			}
+		}
+	}
+
+	return data;
+
+};
+
+module.exports = QRCode;
+
+return module.exports;})();
+return M['index'];})();
+</script>
+<script>
+/* ---------- Song data: year | country | artist | title | place ---------- */
+const BUILTIN = `
+1956|Switzerland|Lys Assia|Refrain|1
+1957|Netherlands|Corry Brokken|Net als toen|1
+1958|France|André Claveau|Dors, mon amour|1
+1958|Italy|Domenico Modugno|Nel blu dipinto di blu|3
+1959|Netherlands|Teddy Scholten|Een beetje|1
+1960|France|Jacqueline Boyer|Tom Pillibi|1
+1961|Luxembourg|Jean-Claude Pascal|Nous les amoureux|1
+1962|France|Isabelle Aubret|Un premier amour|1
+1963|Denmark|Grethe & Jørgen Ingmann|Dansevise|1
+1964|Italy|Gigliola Cinquetti|Non ho l'età|1
+1965|Luxembourg|France Gall|Poupée de cire, poupée de son|1
+1966|Austria|Udo Jürgens|Merci, Chérie|1
+1967|United Kingdom|Sandie Shaw|Puppet on a String|1
+1968|Spain|Massiel|La, la, la|1
+1968|United Kingdom|Cliff Richard|Congratulations|2
+1969|Spain|Salomé|Vivo cantando|1
+1969|United Kingdom|Lulu|Boom Bang-a-Bang|1
+1969|Netherlands|Lenny Kuhr|De troubadour|1
+1969|France|Frida Boccara|Un jour, un enfant|1
+1970|Ireland|Dana|All Kinds of Everything|1
+1971|Monaco|Séverine|Un banc, un arbre, une rue|1
+1972|Luxembourg|Vicky Leandros|Après toi|1
+1973|Luxembourg|Anne-Marie David|Tu te reconnaîtras|1
+1973|United Kingdom|Cliff Richard|Power to All Our Friends|3
+1974|Sweden|ABBA|Waterloo|1
+1974|Italy|Gigliola Cinquetti|Sì|2
+1975|Netherlands|Teach-In|Ding-a-dong|1
+1976|United Kingdom|Brotherhood of Man|Save Your Kisses for Me|1
+1977|France|Marie Myriam|L'oiseau et l'enfant|1
+1978|Israel|Izhar Cohen & Alphabeta|A-Ba-Ni-Bi|1
+1979|Israel|Milk and Honey|Hallelujah|1
+1980|Ireland|Johnny Logan|What's Another Year|1
+1980|Germany|Katja Ebstein|Theater|2
+1981|United Kingdom|Bucks Fizz|Making Your Mind Up|1
+1981|Germany|Lena Valaitis|Johnny Blue|2
+1982|Germany|Nicole|Ein bißchen Frieden|1
+1982|Israel|Avi Toledano|Hora|2
+1983|Luxembourg|Corinne Hermès|Si la vie est cadeau|1
+1984|Sweden|Herreys|Diggi-Loo Diggi-Ley|1
+1984|Ireland|Linda Martin|Terminal 3|2
+1985|Norway|Bobbysocks|La det swinge|1
+1985|Germany|Wind|Für alle|2
+1986|Belgium|Sandra Kim|J'aime la vie|1
+1987|Ireland|Johnny Logan|Hold Me Now|1
+1987|Germany|Wind|Laß die Sonne in dein Herz|2
+1988|Switzerland|Céline Dion|Ne partez pas sans moi|1
+1988|United Kingdom|Scott Fitzgerald|Go|2
+1989|Yugoslavia|Riva|Rock Me|1
+1989|United Kingdom|Live Report|Why Do I Always Get It Wrong|2
+1990|Italy|Toto Cutugno|Insieme: 1992|1
+1991|Sweden|Carola|Fångad av en stormvind|1
+1992|Ireland|Linda Martin|Why Me?|1
+1993|Ireland|Niamh Kavanagh|In Your Eyes|1
+1994|Ireland|Paul Harrington & Charlie McGettigan|Rock 'n' Roll Kids|1
+1994|Poland|Edyta Górniak|To nie ja!|2
+1995|Norway|Secret Garden|Nocturne|1
+1995|Spain|Anabel Conde|Vuelve conmigo|2
+1996|Ireland|Eimear Quinn|The Voice|1
+1996|Norway|Elisabeth Andreassen|I evighet|2
+1997|United Kingdom|Katrina and the Waves|Love Shine a Light|1
+1997|Ireland|Marc Roberts|Mysterious Woman|2
+1998|Israel|Dana International|Diva|1
+1998|United Kingdom|Imaani|Where Are You?|2
+1999|Sweden|Charlotte Nilsson|Take Me to Your Heaven|1
+1999|Iceland|Selma|All Out of Luck|2
+2000|Denmark|Olsen Brothers|Fly on the Wings of Love|1
+2001|Estonia|Tanel Padar, Dave Benton & 2XL|Everybody|1
+2001|Denmark|Rollo & King|Never Ever Let You Go|2
+2002|Latvia|Marie N|I Wanna|1
+2002|Malta|Ira Losco|7th Wonder|2
+2003|Turkey|Sertab Erener|Everyway That I Can|1
+2003|Belgium|Urban Trad|Sanomi|2
+2003|Russia|t.A.T.u.|Ne ver', ne boysia|3
+2004|Ukraine|Ruslana|Wild Dances|1
+2004|Serbia and Montenegro|Željko Joksimović|Lane moje|2
+2005|Greece|Helena Paparizou|My Number One|1
+2006|Finland|Lordi|Hard Rock Hallelujah|1
+2006|Russia|Dima Bilan|Never Let You Go|2
+2007|Serbia|Marija Šerifović|Molitva|1
+2007|Ukraine|Verka Serduchka|Dancing Lasha Tumbai|2
+2008|Russia|Dima Bilan|Believe|1
+2008|Ukraine|Ani Lorak|Shady Lady|2
+2009|Norway|Alexander Rybak|Fairytale|1
+2009|Iceland|Yohanna|Is It True?|2
+2010|Germany|Lena|Satellite|1
+2010|Turkey|maNga|We Could Be the Same|2
+2010|Denmark|Chanée & N'evergreen|In a Moment Like This|4
+2011|Azerbaijan|Ell & Nikki|Running Scared|1
+2011|Italy|Raphael Gualazzi|Madness of Love|2
+2012|Sweden|Loreen|Euphoria|1
+2012|Russia|Buranovskiye Babushki|Party for Everybody|2
+2013|Denmark|Emmelie de Forest|Only Teardrops|1
+2013|Azerbaijan|Farid Mammadov|Hold Me|2
+2014|Austria|Conchita Wurst|Rise Like a Phoenix|1
+2014|Netherlands|The Common Linnets|Calm After the Storm|2
+2015|Sweden|Måns Zelmerlöw|Heroes|1
+2015|Russia|Polina Gagarina|A Million Voices|2
+2015|Italy|Il Volo|Grande amore|3
+2015|Belgium|Loïc Nottet|Rhythm Inside|4
+2016|Ukraine|Jamala|1944|1
+2016|Australia|Dami Im|Sound of Silence|2
+2016|Russia|Sergey Lazarev|You Are the Only One|3
+2017|Portugal|Salvador Sobral|Amar pelos dois|1
+2017|Bulgaria|Kristian Kostov|Beautiful Mess|2
+2017|Moldova|SunStroke Project|Hey Mamma|3
+2017|Italy|Francesco Gabbani|Occidentali's Karma|6
+2018|Israel|Netta|Toy|1
+2018|Cyprus|Eleni Foureira|Fuego|2
+2018|Austria|Cesár Sampson|Nobody but You|3
+2018|Germany|Michael Schulte|You Let Me Walk Alone|4
+2018|Denmark|Rasmussen|Higher Ground|9
+2019|Netherlands|Duncan Laurence|Arcade|1
+2019|Italy|Mahmood|Soldi|2
+2019|Russia|Sergey Lazarev|Scream|3
+2019|Norway|KEiiNO|Spirit in the Sky|6
+2019|Iceland|Hatari|Hatrið mun sigra|10
+2020|Iceland|Daði Freyr|Think About Things|C
+2021|Italy|Måneskin|Zitti e buoni|1
+2021|France|Barbara Pravi|Voilà|2
+2021|Switzerland|Gjon's Tears|Tout l'univers|3
+2021|Iceland|Daði og Gagnamagnið|10 Years|4
+2021|Ukraine|Go_A|Shum|5
+2021|Finland|Blind Channel|Dark Side|6
+2022|Ukraine|Kalush Orchestra|Stefania|1
+2022|United Kingdom|Sam Ryder|Space Man|2
+2022|Spain|Chanel|SloMo|3
+2022|Sweden|Cornelia Jakobs|Hold Me Closer|4
+2022|Italy|Mahmood & Blanco|Brividi|6
+2022|Norway|Subwoolfer|Give That Wolf a Banana|10
+2023|Sweden|Loreen|Tattoo|1
+2023|Finland|Käärijä|Cha Cha Cha|2
+2024|Switzerland|Nemo|The Code|1
+2024|Croatia|Baby Lasagna|Rim Tim Tagi Dim|2
+2025|Austria|JJ|Wasted Love|1
+2025|Israel|Yuval Raphael|New Day Will Rise|2
+2025|Estonia|Tommy Cash|Espresso Macchiato|3
+2025|Sweden|KAJ|Bara bada bastu|4
+2026|Bulgaria|DARA|Bangaranga|1
+`;
+
+/* ---------- Constants ---------- */
+const DEMO = !!window.EUROSTER_DEMO || /(^|[#&])demo(&|$)/.test(location.hash);
+const SLOT_LIMIT = 5;          // Spotify Development Mode: max 5 approved accounts per Client ID (since Feb 2026)
+const SCANNER_CDN = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+const SCOPES = 'user-modify-playback-state user-read-playback-state';
+const SPOTIFY_KEYS = ['evh_tok','evh_matches','evh_device','evh_pending','evh_verifier'];
+
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const mem = new Map();
+const LS = {
+  get(k, d){ try{ const v = DEMO ? mem.get(k) : localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ const s = JSON.stringify(v); DEMO ? mem.set(k, s) : localStorage.setItem(k, s); }catch(e){} },
+  del(k){ try{ DEMO ? mem.delete(k) : localStorage.removeItem(k); }catch(e){} }
+};
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('on'), 3400); }
+function baseUrl(){ return DEMO ? 'https://your-name.github.io/euroster/' : location.origin + location.pathname.replace(/index\.html$/, ''); }
+function clientId(){ return LS.get('evh_client', ''); }
+function role(){ return LS.get('evh_role', 'owner'); }
+function isConnected(){ return DEMO ? LS.get('evh_demo_conn', true) : !!LS.get('evh_tok', null); }
+function extractId(text){
+  if(!text) return null;
+  let m = String(text).match(/(?:track[\/:]|[#?&]t=)([A-Za-z0-9]{22})/);
+  if(m) return m[1];
+  m = String(text).trim().match(/^[A-Za-z0-9]{22}$/);
+  return m ? m[0] : null;
+}
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); toast('Copied'); return true; }
+  catch(e){ toast('Copy didn\'t work here. Select the text and copy it manually.'); return false; }
+}
+async function shareText(text, title){
+  if(navigator.share && !DEMO){ try{ await navigator.share({ title, text }); return true; }catch(e){ if(e && e.name === 'AbortError') return false; } }
+  return copyText(text);
+}
+function fakeId(key){
+  const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let h = 2166136261, out = '';
+  for(let i = 0; i < 22; i++){ h = Math.imul(h ^ key.charCodeAt(i % key.length) ^ i, 16777619) >>> 0; out += c[h % 62]; }
+  return out;
+}
+
+/* ---------- Terms ---------- */
+const TERMS = `
+<p><b>What Euroster is.</b> A private, non-commercial fan game for a small group of friends. It is not affiliated with, sponsored or endorsed by Spotify, the EBU or the Eurovision Song Contest. Music plays through your own Spotify app and account.</p>
+<p><b>What is stored, and where.</b> Only in this browser on this device: your Spotify login, the app's Client ID, your chosen speaker, the Spotify track IDs matched to the cards, songs you add yourself, and for the organiser, the names and emails of approved players. There is no Euroster server, no analytics, no ads and no cookies.</p>
+<p><b>What is sent.</b> Playback commands and song searches go straight to Spotify (accounts.spotify.com and api.spotify.com). The camera picture is read on the device to find the QR code and is never uploaded. On phones without a built-in QR reader, the open-source html5-qrcode library is loaded from unpkg.com.</p>
+<p><b>Disconnecting.</b> Tap Disconnect in Settings at any time. It deletes your Spotify login and cached Spotify data from this device straight away. You can also remove access at spotify.com/account/apps.</p>
+<p><b>Terms of use.</b> Euroster is provided as is. No warranties are made on behalf of Spotify, and all implied warranties regarding the Spotify platform, service and content, including merchantability, fitness for a particular purpose and non-infringement, are disclaimed. The organiser is responsible for Euroster, and Spotify has no liability for it. You may not modify, create derivative works of, decompile or reverse-engineer the Spotify platform, service or content. Spotify is a third-party beneficiary of these terms and this privacy note and may enforce them directly. Your use of Spotify is also covered by Spotify's own terms.</p>
+<p><b>Questions.</b> Contact <span class="ownerRef">the person who invited you</span>.</p>`;
+function renderTerms(){
+  $$('[data-terms]').forEach(el => el.innerHTML = TERMS);
+  const owner = role() === 'guest' ? LS.get('evh_from', '') : LS.get('evh_owner_name', '');
+  $$('.ownerRef').forEach(el => el.textContent = owner || (role() === 'guest' ? 'the person who invited you' : 'the organiser'));
+}
+
+/* ---------- Songs ---------- */
+function parseSongs(text){
+  return String(text || '').split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const p = l.split('|').map(x => x.trim());
+    if(p.length < 4 || !/^\d{4}$/.test(p[0])) return null;
+    return { year: +p[0], country: p[1], artist: p[2], title: p[3], place: p[4] || '' };
+  }).filter(Boolean);
+}
+let _songs = null;
+function allSongs(){
+  if(_songs) return _songs;
+  const list = parseSongs(BUILTIN).concat(parseSongs(LS.get('evh_custom', '')));
+  list.forEach(s => s.key = s.year + '|' + s.country + '|' + s.title);
+  const seen = new Set();
+  _songs = list.filter(s => seen.has(s.key) ? false : seen.add(s.key)).sort((a, b) => a.year - b.year);
+  return _songs;
+}
+function placeLabel(p){
+  if(!p) return '';
+  if(p === 'C') return 'Contest cancelled';
+  const n = +p; if(!n) return p;
+  if(n === 1) return 'Winner';
+  const sfx = (n % 100 >= 11 && n % 100 <= 13) ? 'th' : ({1:'st',2:'nd',3:'rd'}[n % 10] || 'th');
+  return n + sfx + ' place';
+}
+
+/* ---------- Spotify auth (PKCE, no client secret) ---------- */
+function randStr(n){
+  const a = new Uint8Array(n); crypto.getRandomValues(a);
+  const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  return Array.from(a, x => c[x % c.length]).join('');
+}
+async function pkceChallenge(v){
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v));
+  return btoa(String.fromCharCode(...new Uint8Array(d))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+async function login(){
+  if(DEMO){ LS.set('evh_demo_conn', true); updateConn(); toast('In the real app this opens the Spotify login'); return true; }
+  const id = role() === 'guest' ? clientId() : $('#clientId').value.trim();
+  if(!id){ setSetMsg('Paste your Spotify Client ID first.'); return false; }
+  if(!LS.get('evh_agreed', false)){ setSetMsg('Tick the box to agree to the privacy note and terms first.'); return false; }
+  LS.set('evh_client', id);
+  const v = randStr(64); LS.set('evh_verifier', v);
+  const p = new URLSearchParams({
+    client_id: id, response_type: 'code', redirect_uri: baseUrl(), scope: SCOPES,
+    code_challenge_method: 'S256', code_challenge: await pkceChallenge(v)
+  });
+  location.href = 'https://accounts.spotify.com/authorize?' + p;
+  return true;
+}
+async function tokenRequest(params){
+  const r = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams(params)
+  });
+  const j = await r.json();
+  if(!r.ok) throw new Error(j.error_description || j.error || 'Token error');
+  const old = LS.get('evh_tok', {}) || {};
+  const t = { access: j.access_token, refresh: j.refresh_token || old.refresh, exp: Date.now() + (j.expires_in - 60) * 1000 };
+  LS.set('evh_tok', t);
+  return t;
+}
+async function exchangeCode(code){
+  const v = LS.get('evh_verifier', '');
+  await tokenRequest({ grant_type: 'authorization_code', code, redirect_uri: baseUrl(), client_id: clientId(), code_verifier: v });
+  LS.del('evh_verifier');
+}
+async function getToken(){
+  let t = LS.get('evh_tok', null);
+  if(!t) return null;
+  if(Date.now() > t.exp){
+    try{ t = await tokenRequest({ grant_type: 'refresh_token', refresh_token: t.refresh, client_id: clientId() }); }
+    catch(e){ LS.del('evh_tok'); updateConn(); return null; }
+  }
+  return t.access;
+}
+async function api(path, opts = {}){
+  if(DEMO) throw new Error('Preview mode');
+  const tok = await getToken();
+  if(!tok) throw new Error('Not connected to Spotify. Open Settings and connect.');
+  const init = { method: opts.method || 'GET', headers: { Authorization: 'Bearer ' + tok } };
+  if(opts.body){ init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(opts.body); }
+  const r = await fetch('https://api.spotify.com/v1' + path, init);
+  if(r.status === 429){ await sleep((+(r.headers.get('Retry-After')) || 3) * 1000); return api(path, opts); }
+  return r;
+}
+async function checkAccess(){
+  try{
+    const r = await api('/me/player/devices');
+    if(r.ok) return { ok: true };
+    let m = ''; try{ m = (await r.json()).error.message; }catch(e){}
+    return { ok: false, status: r.status, msg: m };
+  }catch(e){ return { ok: false, msg: e.message }; }
+}
+async function afterLogin(){
+  const a = await checkAccess();
+  if(a.ok){ toast('Connected to Spotify'); hideWelcome(); return; }
+  if(a.status === 403){
+    if(role() === 'guest') showWelcome('pending');
+    else setSetMsg('Spotify refused this account' + (a.msg ? ' (' + a.msg + ')' : '') + '. Check it is added under User Management in your dashboard and has Premium.');
+  } else if(a.msg) setSetMsg(a.msg);
+}
+async function handleRedirect(){
+  const p = new URLSearchParams(location.search);
+  const code = p.get('code'), err = p.get('error');
+  if(!code && !err) return;
+  history.replaceState(null, '', baseUrl());
+  if(err){
+    if(role() === 'guest') showWelcome('pending'); else setSetMsg('Spotify login was cancelled or refused.');
+    return;
+  }
+  if(!LS.get('evh_verifier', null)){ showWelcome('code', code); return; }
+  try{ await exchangeCode(code); updateConn(); await afterLogin(); }
+  catch(e){ setSetMsg('Spotify login failed: ' + e.message); }
+}
+function setSetMsg(t){ $('#setMsg').textContent = t || ''; if(t) switchTab('settings'); }
+let disconnectArmed = false;
+function disconnect(){
+  if(!disconnectArmed){
+    disconnectArmed = true; $('#disconnectNote').hidden = false; $('#disconnectBtn').textContent = 'Confirm disconnect';
+    setTimeout(() => { disconnectArmed = false; $('#disconnectNote').hidden = true; $('#disconnectBtn').textContent = 'Disconnect'; }, 5000);
+    return;
+  }
+  disconnectArmed = false; $('#disconnectNote').hidden = true; $('#disconnectBtn').textContent = 'Disconnect';
+  SPOTIFY_KEYS.forEach(k => LS.del(k));
+  if(DEMO) LS.set('evh_demo_conn', false);
+  updateConn(); renderSongs(); setSetMsg('');
+  toast('Disconnected. Your Spotify data is deleted from this device.');
+}
+function updateConn(){
+  const ok = isConnected();
+  [['#connDot','#connText'],['#connDot2','#connText2']].forEach(([d, t]) => {
+    $(d).classList.toggle('ok', ok);
+    $(t).textContent = ok ? (DEMO ? 'Connected (preview)' : 'Connected to Spotify') : 'Not connected. Open Settings to connect Spotify.';
+  });
+  $('#codeBox').hidden = DEMO || ok || !LS.get('evh_verifier', null);
+  $('#ownerSetup').open = !ok;
+}
+
+/* ---------- Playback ---------- */
+let paused = false, currentId = null;
+function startOffset(){
+  const v = LS.get('evh_start', '0');
+  if(v === 'random') return Math.floor(20000 + Math.random() * 40000);
+  return (+v || 0) * 1000;
+}
+function setState(s){
+  $('#st-idle').hidden = s !== 'idle';
+  $('#st-scan').hidden = s !== 'scan';
+  $('#st-play').hidden = s !== 'play';
+}
+function setMsg(t){ $('#playMsg').textContent = t || ''; }
+function updatePause(){ $('#pauseBtn').textContent = paused ? 'Resume' : 'Pause'; $('#eq').classList.toggle('paused', paused); }
+
+async function playTrack(id){
+  currentId = id; setState('play'); setMsg('');
+  if(DEMO){ paused = false; updatePause(); return; }
+  try{
+    const body = { uris: ['spotify:track:' + id], position_ms: startOffset() };
+    const dev = LS.get('evh_device', '');
+    let r = await api('/me/player/play' + (dev ? '?device_id=' + encodeURIComponent(dev) : ''), { method: 'PUT', body });
+    if(r.status === 404){
+      const dj = await (await api('/me/player/devices')).json();
+      const d = (dj.devices || []).find(x => !x.is_restricted);
+      if(!d) throw new Error('No Spotify device found. Open Spotify on your phone or speaker, play anything for a second, then scan the card again.');
+      r = await api('/me/player/play?device_id=' + encodeURIComponent(d.id), { method: 'PUT', body });
+    }
+    if(!r.ok){
+      let t = ''; try{ t = (await r.json()).error.message; }catch(e){}
+      if(r.status === 403) throw new Error('Spotify refused playback' + (t ? ' (' + t + ')' : '') + '. The account needs Premium and must be approved for this app.');
+      throw new Error('Spotify error ' + r.status + (t ? ': ' + t : ''));
+    }
+    paused = false; updatePause();
+  }catch(e){ setMsg(e.message); paused = true; updatePause(); }
+}
+async function togglePause(){
+  if(DEMO){ paused = !paused; updatePause(); return; }
+  try{
+    const r = await api(paused ? '/me/player/play' : '/me/player/pause', { method: 'PUT' });
+    if(r.ok){ paused = !paused; updatePause(); setMsg(''); }
+    else if(paused && currentId) playTrack(currentId);
+  }catch(e){ setMsg(e.message); }
+}
+
+/* ---------- Scanner: native BarcodeDetector first, html5-qrcode as fallback ---------- */
+let stream = null, scanTimer = null, h5 = null, handling = false;
+function loadScript(src){
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { s.remove(); rej(new Error('load failed')); }; document.head.appendChild(s); });
+}
+async function startScan(){
+  if(!isConnected()){ setMsg('Connect Spotify in Settings first.'); return; }
+  setMsg(''); setState('scan');
+  const reader = $('#reader'); reader.innerHTML = '';
+  if(DEMO){
+    reader.innerHTML = '<div class="fakecam"><div class="frame"><div class="scanline"></div></div></div>';
+    const pick = allSongs()[Math.floor(Math.random() * allSongs().length)];
+    scanTimer = setTimeout(() => onScan(baseUrl() + '#t=' + fakeId(pick.key)), 1700);
+    return;
+  }
+  try{
+    if('BarcodeDetector' in window){
+      const formats = await BarcodeDetector.getSupportedFormats().catch(() => []);
+      if(formats.includes('qr_code')){ await nativeScan(reader); return; }
+    }
+    if(!window.Html5Qrcode){ await loadScript('html5-qrcode.min.js').catch(() => loadScript(SCANNER_CDN)); }
+    reader.innerHTML = '<div id="h5reader" style="width:100%;height:100%"></div>';
+    h5 = new Html5Qrcode('h5reader');
+    await h5.start({ facingMode: 'environment' },
+      { fps: 10, qrbox: (w, h) => { const s = Math.floor(Math.min(w, h) * 0.7); return { width: s, height: s }; } },
+      onScan, () => {});
+  }catch(e){ await stopScan(); setState(currentId ? 'play' : 'idle'); setMsg('Camera unavailable: ' + (e.message || e)); }
+}
+async function nativeScan(reader){
+  const video = document.createElement('video');
+  video.setAttribute('playsinline', ''); video.muted = true; video.autoplay = true;
+  reader.appendChild(video);
+  stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+  video.srcObject = stream; await video.play();
+  const detector = new BarcodeDetector({ formats: ['qr_code'] });
+  const tick = async () => {
+    if(!stream) return;
+    try{ const res = await detector.detect(video); if(res && res.length){ onScan(res[0].rawValue); return; } }catch(e){}
+    scanTimer = setTimeout(tick, 150);
+  };
+  tick();
+}
+async function stopScan(){
+  clearTimeout(scanTimer); scanTimer = null;
+  if(stream){ stream.getTracks().forEach(t => t.stop()); stream = null; }
+  if(h5){ try{ if(h5.isScanning) await h5.stop(); }catch(e){} h5 = null; }
+  $('#reader').innerHTML = '';
+}
+async function onScan(text){
+  if(handling) return;
+  const id = extractId(text);
+  if(!id) return;
+  handling = true;
+  if(navigator.vibrate) navigator.vibrate(60);
+  await stopScan();
+  await playTrack(id);
+  handling = false;
+}
+
+/* ---------- Devices ---------- */
+async function loadDevices(){
+  const sel = $('#deviceSel'); const saved = LS.get('evh_device', '');
+  let devices = [];
+  if(DEMO) devices = [{ id: 'd1', name: 'Living room speaker', type: 'Speaker' }, { id: 'd2', name: 'MacBook Air', type: 'Computer' }];
+  else{
+    try{ const j = await (await api('/me/player/devices')).json(); devices = j.devices || []; }
+    catch(e){ toast(e.message); return; }
+  }
+  sel.innerHTML = '<option value="">Whichever Spotify device is active</option>' +
+    devices.map(d => `<option value="${esc(d.id)}">${esc(d.name)} (${esc(d.type)})</option>`).join('');
+  sel.value = devices.some(d => d.id === saved) ? saved : '';
+  if(!devices.length) toast('No devices found. Open Spotify on a device and tap Refresh.');
+}
+
+/* ---------- Card maker ---------- */
+const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+function scoreTrack(it, s){
+  let sc = 0;
+  const n = norm(it.name), t = norm(s.title);
+  if(n === t) sc += 12; else if(n.startsWith(t) || n.includes(t)) sc += 8; else if(t.includes(n)) sc += 4;
+  const arts = norm((it.artists || []).map(a => a.name).join(' '));
+  const firstWord = norm(s.artist).split(' ')[0];
+  if(firstWord && arts.includes(firstWord)) sc += 6;
+  if(/\b(live|karaoke|instrumental|remix|cover|acoustic|sped up|slowed|8 ?bit)\b/i.test(it.name)) sc -= 6;
+  const y = parseInt((it.album && it.album.release_date) || '0', 10);
+  if(y === s.year) sc += 4; else if(Math.abs(y - s.year) <= 1) sc += 2;
+  if(typeof it.popularity === 'number') sc += it.popularity / 50;
+  return sc;
+}
+async function searchTracks(q){
+  const r = await api('/search?type=track&limit=10&q=' + encodeURIComponent(q));
+  if(!r.ok) return [];
+  const j = await r.json();
+  return (j.tracks && j.tracks.items) || [];
+}
+async function matchSong(s){
+  let best = null, bestSc = -99;
+  for(const it of await searchTracks(s.title + ' ' + s.artist)){ const sc = scoreTrack(it, s); if(sc > bestSc){ best = it; bestSc = sc; } }
+  if(bestSc < 10){
+    for(const it of await searchTracks(s.title)){ const sc = scoreTrack(it, s); if(sc > bestSc){ best = it; bestSc = sc; } }
+  }
+  if(!best || bestSc < 6) return null;
+  return { id: best.id, name: best.name, artists: best.artists.map(a => a.name).join(', '), sure: bestSc >= 14 };
+}
+function demoMatch(s, i){
+  if(i % 41 === 17) return null;
+  return { id: fakeId(s.key), name: s.title, artists: s.artist, sure: i % 13 !== 5 };
+}
+function matches(){ return LS.get('evh_matches', {}); }
+function excluded(){ return new Set(LS.get('evh_excluded', [])); }
+let fixOpen = null;
+
+function renderSongs(){
+  const list = allSongs(), m = matches(), ex = excluded();
+  $('#songList').innerHTML = list.map((s, i) => {
+    const mt = m[s.key];
+    let status;
+    if(mt === null) status = '<div class="m bad">No match found. Tap Fix to paste a Spotify link.</div>';
+    else if(mt) status = `<div class="m ${mt.sure ? 'ok' : 'bad'}">${mt.sure ? '&#10003;' : 'Check:'} ${DEMO ? `<u>${esc(mt.name)} · ${esc(mt.artists)}</u>` : `<a href="https://open.spotify.com/track/${esc(mt.id)}" target="_blank" rel="noopener">${esc(mt.name)} · ${esc(mt.artists)}</a>`}</div>`;
+    else status = '<div class="m">Not matched yet</div>';
+    const fix = fixOpen === i ? `<div class="fixbox"><input type="text" id="fixIn" placeholder="Paste a Spotify track link"><button class="btn mini" data-fixgo="${i}">Save</button><button class="btn mini" data-fixsearch="${i}">Search again</button></div>` : '';
+    return `<li>
+      <input type="checkbox" data-i="${i}" ${ex.has(s.key) ? '' : 'checked'} aria-label="Include ${esc(s.title)}">
+      <div class="meta"><div class="t">${s.year} · ${esc(s.country)}</div><div>${esc(s.artist)} · ${esc(s.title)}</div>${status}${fix}</div>
+      <button class="btn mini" data-fix="${i}">${fixOpen === i ? 'Close' : 'Fix'}</button>
+    </li>`;
+  }).join('');
+  const inc = list.filter(s => !ex.has(s.key));
+  const ready = inc.filter(s => m[s.key]);
+  $('#cardStats').textContent = `${inc.length} songs selected, ${ready.length} matched and ready to print.`;
+  if(fixOpen !== null){ const f = $('#fixIn'); if(f) f.focus(); }
+}
+async function runMatching(){
+  const list = allSongs(), ex = excluded();
+  const todo = list.filter(s => !ex.has(s.key) && matches()[s.key] === undefined);
+  if(!todo.length){ toast('Everything selected is already matched'); return; }
+  const btn = $('#matchBtn'); btn.disabled = true;
+  try{
+    for(let i = 0; i < todo.length; i++){
+      const s = todo[i];
+      const res = DEMO ? demoMatch(s, list.indexOf(s)) : await matchSong(s);
+      const m = matches(); m[s.key] = res; LS.set('evh_matches', m);
+      $('#prog').style.width = ((i + 1) / todo.length * 100) + '%';
+      if(i % 8 === 7) renderSongs();
+      await sleep(DEMO ? 12 : 150);
+    }
+    toast('Matching done. Check the orange ones.');
+  }catch(e){ toast(e.message); }
+  btn.disabled = false; renderSongs();
+}
+async function saveFix(i, search){
+  const s = allSongs()[i];
+  try{
+    let res;
+    if(search){ res = DEMO ? demoMatch(s, 0) : await matchSong(s); }
+    else{
+      const id = extractId(($('#fixIn') || {}).value);
+      if(!id){ toast('That isn\'t a Spotify track link. Copy it from Share, then Copy song link.'); return; }
+      if(DEMO) res = { id, name: s.title, artists: s.artist, sure: true };
+      else{
+        const r = await api('/tracks/' + id);
+        if(!r.ok){ toast('Couldn\'t load that track. Check the link.'); return; }
+        const t = await r.json();
+        res = { id: t.id, name: t.name, artists: t.artists.map(a => a.name).join(', '), sure: true };
+      }
+    }
+    const m = matches(); m[s.key] = res; LS.set('evh_matches', m);
+    fixOpen = null; renderSongs(); toast(res ? 'Saved' : 'Still no match. Paste a link instead.');
+  }catch(e){ toast(e.message); }
+}
+
+/* ---------- QR + cards ---------- */
+function qrSvg(text){
+  const q = new EurosterQR(-1, 0); // level M
+  q.addData(text); q.make();
+  const n = q.getModuleCount(); let d = '';
+  for(let r = 0; r < n; r++) for(let c = 0; c < n; c++) if(q.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
+  return `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg"><path d="${d}" fill="#000"/></svg>`;
+}
+function frontCard(s){
+  return `<div class="pc front"><div class="ring"><div class="inner"><div class="qr">${qrSvg(baseUrl() + '#t=' + s.match.id)}</div></div></div></div>`;
+}
+function backCard(s){
+  const hue = Math.round(((Math.floor(s.year / 10) * 10 - 1950) / 10) * 42 + 300) % 360;
+  const bg = `linear-gradient(135deg,hsl(${hue} 80% 45%),hsl(${(hue + 40) % 360} 75% 33%))`;
+  return `<div class="pc back" style="background:${bg}">
+    <div class="country">${esc(s.country)}</div>
+    <div class="artist">${esc(s.artist)}</div>
+    <div class="year">${s.year}</div>
+    <div class="title">${esc(s.title)}</div>
+    <div class="place">${esc(placeLabel(s.place))}</div>
+  </div>`;
+}
+function printable(){
+  const m = matches(), ex = excluded();
+  return allSongs().filter(s => !ex.has(s.key) && m[s.key]).map(s => Object.assign({}, s, { match: m[s.key] }));
+}
+function previewCards(){
+  let list = printable();
+  if(!list.length) list = allSongs().map(s => Object.assign({}, s, { match: { id: fakeId(s.key) } }));
+  const picks = [];
+  const copy = list.slice();
+  while(picks.length < 3 && copy.length) picks.push(copy.splice(Math.floor(Math.random() * copy.length), 1)[0]);
+  const box = $('#cardPreview');
+  box.innerHTML = picks.map(s => `<div class="side"><span>Front</span>${frontCard(s)}</div><div class="side"><span>Back</span>${backCard(s)}</div>`).join('');
+  box.hidden = false;
+}
+function printCards(){
+  const list = printable();
+  if(!list.length){ toast('Match some songs on Spotify first'); return; }
+  if(DEMO){ previewCards(); toast('Printing is off in the preview. Here are three sample cards.'); return; }
+  for(let i = list.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
+  const blank = '<div class="pc blank"></div>';
+  let html = '';
+  for(let i = 0; i < list.length; i += 12){
+    const chunk = list.slice(i, i + 12);
+    while(chunk.length < 12) chunk.push(null);
+    html += '<div class="page">' + chunk.map(c => c ? frontCard(c) : blank).join('') + '</div>';
+    const back = [];
+    for(let r = 0; r < 4; r++) for(let col = 2; col >= 0; col--) back.push(chunk[r * 3 + col]);
+    html += '<div class="page">' + back.map(c => c ? backCard(c) : blank).join('') + '</div>';
+  }
+  $('#print').innerHTML = html;
+  setTimeout(() => window.print(), 300);
+}
+
+/* ---------- Players (organiser) ---------- */
+function players(){ return LS.get('evh_players', []); }
+function inviteLink(){
+  const p = new URLSearchParams({ invite: clientId(), from: LS.get('evh_owner_name', '') || 'A friend' });
+  return baseUrl() + '#' + p.toString();
+}
+function renderPlayers(){
+  const isOwner = role() === 'owner';
+  $('#playersCard').hidden = !isOwner;
+  $('#ownerSetup').hidden = !isOwner;
+  if(!isOwner) return;
+  const list = players();
+  const used = 1 + list.length;
+  const pill = $('#slotPill');
+  pill.textContent = `${used} of ${SLOT_LIMIT} spots`;
+  pill.classList.toggle('full', used >= SLOT_LIMIT);
+  const me = LS.get('evh_owner_name', '') || 'You';
+  $('#playerList').innerHTML =
+    `<li><div class="avatar">${esc(me[0].toUpperCase())}</div><div class="who"><div><b>${esc(me)}</b></div><div class="small muted">Organiser</div></div></li>` +
+    list.map((p, i) => `<li>
+      <div class="avatar">${esc((p.name || '?')[0].toUpperCase())}</div>
+      <div class="who"><div><b>${esc(p.name)}</b></div><div class="small muted">${esc(p.email)}</div></div>
+      <div class="acts">
+        <button class="btn mini" data-invite="${i}">Share invite link</button>
+        <button class="btn mini" data-copyemail="${i}">Copy email</button>
+        <button class="btn mini danger" data-remove="${i}">${removeArmed === i ? 'Tap to confirm' : 'Remove'}</button>
+      </div>
+    </li>`).join('');
+  const full = used >= SLOT_LIMIT;
+  $('#addPlayer').hidden = full;
+  $('#slotsFull').hidden = !full;
+}
+let removeArmed = null;
+async function addPlayer(){
+  const name = $('#pName').value.trim(), email = $('#pEmail').value.trim();
+  if(!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ toast('Add a name and the email they use for Spotify'); return; }
+  const list = players();
+  if(1 + list.length >= SLOT_LIMIT){ toast('All spots are taken'); return; }
+  if(list.some(p => p.email.toLowerCase() === email.toLowerCase())){ toast('That email is already approved'); return; }
+  if(!clientId() && !DEMO){ toast('Connect Spotify first, so the invite link has your Client ID'); return; }
+  list.push({ name, email }); LS.set('evh_players', list);
+  $('#pName').value = ''; $('#pEmail').value = '';
+  renderPlayers();
+  await shareText(`${name}, join me on Euroster, our Eurovision card game. Open this link on your phone: ${inviteLink()}`, 'Euroster invite');
+  toast(`Approved. Last step: add ${email} under User Management in your Spotify dashboard.`);
+}
+
+/* ---------- Welcome sheet (friends) ---------- */
+function showWelcome(mode, code){
+  const from = LS.get('evh_from', '') || (DEMO ? 'Alex' : 'Your friend');
+  $$('.fromName').forEach(el => el.textContent = from);
+  renderTerms();
+  $('#w-invite').hidden = mode !== 'invite';
+  $('#w-pending').hidden = mode !== 'pending';
+  $('#w-code').hidden = mode !== 'code';
+  if(mode === 'code') $('#wCodeShow').textContent = code;
+  $('#wNote').textContent = '';
+  $('#welcome').hidden = false;
+}
+function hideWelcome(){ $('#welcome').hidden = true; }
+
+/* ---------- Tabs & wiring ---------- */
+async function switchTab(name){
+  $$('nav button').forEach(x => x.classList.toggle('on', x.dataset.tab === name));
+  $$('section').forEach(s => s.classList.toggle('on', s.id === 'tab-' + name));
+  if(name !== 'play' && !$('#st-scan').hidden){ await stopScan(); setState(currentId ? 'play' : 'idle'); }
+  if(name === 'cards') renderSongs();
+  if(name === 'settings') renderPlayers();
+}
+$$('nav button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+$('#scanBtn').onclick = startScan;
+$('#nextBtn').onclick = startScan;
+$('#cancelScan').onclick = async () => { await stopScan(); setState(currentId ? 'play' : 'idle'); };
+$('#pauseBtn').onclick = togglePause;
+$('#connectBtn').onclick = login;
+$('#disconnectBtn').onclick = disconnect;
+$('#agree').onchange = e => { LS.set('evh_agreed', e.target.checked); if(e.target.checked) setSetMsg(''); };
+$('#clientId').addEventListener('change', e => LS.set('evh_client', e.target.value.trim()));
+$('#copyRedirect').onclick = () => copyText(baseUrl());
+$('#codeBtn').onclick = async () => {
+  const c = $('#codeIn').value.trim(); if(!c) return;
+  try{ await exchangeCode(c); $('#codeIn').value = ''; updateConn(); await afterLogin(); }
+  catch(e){ setSetMsg('That code didn\'t work: ' + e.message + '. Codes expire after a few minutes, so try connecting again.'); }
+};
+$('#refreshDev').onclick = loadDevices;
+$('#deviceSel').onchange = e => LS.set('evh_device', e.target.value);
+$('#startSel').onchange = e => LS.set('evh_start', e.target.value);
+$('#matchBtn').onclick = runMatching;
+$('#previewBtn').onclick = previewCards;
+$('#printBtn').onclick = printCards;
+$('#allBtn').onclick = () => { LS.set('evh_excluded', []); renderSongs(); };
+$('#noneBtn').onclick = () => { LS.set('evh_excluded', allSongs().map(s => s.key)); renderSongs(); };
+$('#songList').addEventListener('change', e => {
+  const i = e.target.dataset.i; if(i === undefined) return;
+  const s = allSongs()[+i]; const ex = excluded();
+  e.target.checked ? ex.delete(s.key) : ex.add(s.key);
+  LS.set('evh_excluded', [...ex]); renderSongs();
+});
+$('#songList').addEventListener('click', e => {
+  const d = e.target.dataset;
+  if(d.fix !== undefined){ fixOpen = fixOpen === +d.fix ? null : +d.fix; renderSongs(); }
+  else if(d.fixgo !== undefined) saveFix(+d.fixgo, false);
+  else if(d.fixsearch !== undefined) saveFix(+d.fixsearch, true);
+});
+$('#saveCustom').onclick = () => {
+  const txt = $('#customSongs').value;
+  LS.set('evh_custom', txt); _songs = null; renderSongs(); toast(parseSongs(txt).length + ' custom songs saved');
+};
+$('#ownerName').addEventListener('input', e => { LS.set('evh_owner_name', e.target.value.trim()); renderPlayers(); renderTerms(); });
+$('#pAdd').onclick = addPlayer;
+$('#playerList').addEventListener('click', e => {
+  const d = e.target.dataset, list = players();
+  if(d.invite !== undefined){ const p = list[+d.invite]; shareText(`${p.name}, join me on Euroster, our Eurovision card game. Open this link on your phone: ${inviteLink()}`, 'Euroster invite'); }
+  if(d.copyemail !== undefined) copyText(list[+d.copyemail].email);
+  if(d.remove !== undefined){
+    const i = +d.remove;
+    if(removeArmed !== i){ removeArmed = i; renderPlayers(); setTimeout(() => { if(removeArmed === i){ removeArmed = null; renderPlayers(); } }, 4000); return; }
+    const p = list.splice(i, 1)[0]; removeArmed = null; LS.set('evh_players', list); renderPlayers();
+    toast(`Removed ${p.name}. Also remove ${p.email} in your Spotify dashboard to cut access.`);
+  }
+});
+$('#ownKeyLink').onclick = e => { e.preventDefault(); shareText(`Want Euroster at home? Set up your own free Spotify key here: ${baseUrl()}#setup`, 'Euroster setup'); };
+$('#wAgree').onchange = e => LS.set('evh_agreed', e.target.checked);
+$('#wConnect').onclick = async () => {
+  if(!$('#wAgree').checked){ toast('Tick the box to agree first'); return; }
+  if(DEMO){ showWelcome('pending'); return; }
+  login();
+};
+$('#wRequest').onclick = () => {
+  const email = $('#wEmail').value.trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ toast('Enter the email you use for Spotify'); return; }
+  const from = LS.get('evh_from', '') || 'there';
+  shareText(`Hi ${from}! Please approve me for Euroster. My Spotify email is ${email}`, 'Euroster approval');
+  $('#wNote').textContent = 'Request ready. Once you hear back, tap "I\'ve been approved".';
+};
+$('#wRetry').onclick = async () => {
+  if(DEMO){ hideWelcome(); toast('Approved! You\'re in.'); return; }
+  if(LS.get('evh_tok', null)){ const a = await checkAccess(); if(a.ok){ hideWelcome(); toast('Approved! You\'re in.'); } else $('#wNote').textContent = 'Spotify still says no. Ask them to double-check your email in the dashboard.'; }
+  else login();
+};
+$('#wCopyCode').onclick = () => copyText($('#wCodeShow').textContent);
+$('#wClose').onclick = hideWelcome;
+$('#demoInvite').onclick = () => showWelcome('invite');
+function viewAs(r){
+  LS.set('evh_role', r); LS.set('evh_from', 'Alex');
+  $('#asOwner').classList.toggle('on', r === 'owner'); $('#asFriend').classList.toggle('on', r === 'guest');
+  renderPlayers(); renderTerms(); switchTab('settings');
+  toast(r === 'guest' ? 'Friend view: no setup steps or Players list' : 'Organiser view');
+}
+$('#asOwner').onclick = () => viewAs('owner');
+$('#asFriend').onclick = () => viewAs('guest');
+$('#demoPending').onclick = () => showWelcome('pending');
+
+/* ---------- Start ---------- */
+(async function init(){
+  if(DEMO){
+    LS.set('evh_owner_name', 'Alex');
+    LS.set('evh_agreed', true);
+    LS.set('evh_players', [{ name: 'Sofie', email: 'sofie@example.com' }, { name: 'Jonas', email: 'jonas@example.com' }]);
+    const m = {}; allSongs().forEach((s, i) => m[s.key] = demoMatch(s, i)); LS.set('evh_matches', m);
+    $('#demoTag').hidden = false; $('#demoBanner').hidden = false; $('#demoTools').hidden = false;
+  }
+  const hp = new URLSearchParams(location.hash.slice(1));
+  if(hp.get('invite')){
+    LS.set('evh_client', hp.get('invite')); LS.set('evh_role', 'guest'); LS.set('evh_from', hp.get('from') || '');
+    history.replaceState(null, '', baseUrl());
+    if(!isConnected()) showWelcome('invite');
+  } else if(location.hash === '#setup'){
+    LS.set('evh_role', 'owner'); history.replaceState(null, '', baseUrl()); switchTab('settings');
+  }
+  const hashId = extractId(location.hash);
+  if(hashId && !DEMO){ LS.set('evh_pending', hashId); history.replaceState(null, '', baseUrl()); }
+
+  $('#redirectShow').textContent = baseUrl();
+  $('#clientId').value = clientId();
+  $('#agree').checked = $('#wAgree').checked = !!LS.get('evh_agreed', false);
+  $('#startSel').value = LS.get('evh_start', '0');
+  $('#customSongs').value = LS.get('evh_custom', '');
+  $('#ownerName').value = LS.get('evh_owner_name', '');
+  renderTerms(); renderPlayers();
+
+  if(!DEMO) await handleRedirect();
+  updateConn();
+  const saved = LS.get('evh_device', '');
+  if(saved){ const o = document.createElement('option'); o.value = saved; o.textContent = 'Saved device'; $('#deviceSel').appendChild(o); $('#deviceSel').value = saved; }
+  const pending = LS.get('evh_pending', null);
+  if(pending){
+    if(isConnected()){ LS.del('evh_pending'); playTrack(pending); }
+    else setMsg('Connect Spotify in Settings, then the scanned song will play.');
+  }
+  if(!DEMO && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>
