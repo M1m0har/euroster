@@ -21,7 +21,7 @@ iPhone: open the site in Safari > Share > Add to Home Screen.
 Android: open in Chrome > menu > Install app.
 
 ## Card numbers never change
-Every song has a fixed card number (#0001 to #0878, in year and placing order). Each QR code holds
+Every song has a fixed card number (0001 to 0878). The numbers are deliberately shuffled so they give no hint about the year, and they aren't printed on the cards. Each QR code holds
 that number plus the Spotify track, for example `https://m1m0har.github.io/euroster/#c=0042&t=<spotify id>`.
 Printed cards therefore play on any phone and stay valid even if you reprint. New songs added later
 get new numbers at the end (0879 onwards), so existing cards are never renumbered.
