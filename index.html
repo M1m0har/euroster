@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://accounts.spotify.com https://api.spotify.com; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://accounts.spotify.com https://api.spotify.com; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
@@ -14,6 +14,7 @@
 <meta name="theme-color" content="#070b2e">
 
 <title>Euroster</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Instrument+Sans:ital,wght@0,400;0,600;0,700;1,500&family=JetBrains+Mono:wght@400&display=swap" media="print" onload="this.media='all'">
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="A private Eurovision song timeline game">
 <style>
@@ -115,7 +116,7 @@ code{font-family:var(--mono);background:var(--bg-deep);padding:2px 6px;border-ra
 .cardprev{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 .cardprev .side{display:flex;flex-direction:column;align-items:center;gap:4px}
 .cardprev .side span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.cardprev .pc{zoom:.62;border-radius:3mm;border-style:solid;border-color:var(--line)}
+.cardprev .pcard{zoom:.55;border-radius:2mm}
 
 /* Players */
 .players{list-style:none;padding:0;margin:12px 0 0}
@@ -142,30 +143,37 @@ ol.steps li{margin:7px 0;font-size:14px}
 #toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--line);padding:10px 16px;border-radius:12px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:40;max-width:min(90vw,460px);text-align:center;font-size:14px}
 #toast.on{opacity:1}
 
-/* Print */
+/* Printed cards (same design as the Euroster card printer) */
+:root{--pdisplay:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;--pbody:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--pmono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
 #print{display:none}
+.psheet{width:210mm;height:297mm;background:#fff;color:#111;position:relative;flex:none}
+.cgrid{position:absolute;display:grid}
+.pcard{width:var(--card);height:var(--card);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff;color:#111;font-family:var(--pbody)}
+.cut .pcard{outline:.2mm dashed #b9bccb;outline-offset:-.1mm}
+.pfront{flex-direction:column;gap:calc(var(--card)*.03)}
+.pfront svg{width:calc(var(--card)*.72);height:calc(var(--card)*.72);display:block}
+.pfront .id{font:400 calc(var(--card)*.045)/1 var(--pmono);color:#777;letter-spacing:.08em}
+.pback{flex-direction:column;text-align:center;padding:calc(var(--card)*.07) calc(var(--card)*.07) calc(var(--card)*.12);gap:calc(var(--card)*.015);background:var(--tint,#fff)}
+.pback .ctry{font:700 calc(var(--card)*.058)/1.1 var(--pbody);letter-spacing:.14em;text-transform:uppercase;color:#333}
+.pback .yr{font:900 calc(var(--card)*.30)/.92 var(--pdisplay);font-variant-numeric:tabular-nums;color:#0d0f1c}
+.pback .art{font:700 calc(var(--card)*.075)/1.15 var(--pbody);text-wrap:balance;color:#111}
+.pback .ttl{font:500 italic calc(var(--card)*.066)/1.2 var(--pbody);text-wrap:balance;color:#2a2a2a}
+.pback .plc{position:absolute;left:0;right:0;bottom:calc(var(--card)*.055);font:600 calc(var(--card)*.042)/1 var(--pbody);letter-spacing:.12em;text-transform:uppercase;color:#4a4a4a}
+.pempty{visibility:hidden}
+@page{size:A4 portrait;margin:0}
 @media print{
-  @page{size:A4;margin:12mm}
   body{background:#fff !important}
   body::after{display:none}
   body>*:not(#print){display:none !important}
   #print{display:block}
+  .psheet{break-after:page;page-break-after:always}
+  .psheet:last-child{break-after:auto;page-break-after:auto}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
-.page{width:180mm;height:240mm;display:grid;grid-template-columns:repeat(3,60mm);grid-template-rows:repeat(4,60mm);margin:0 auto;break-after:page;page-break-after:always}
-.pc{width:60mm;height:60mm;border:.2mm dashed #c8c8c8;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;font-family:var(--font);position:relative;color:#111}
-.pc.blank{border-color:transparent}
-.pc.front{background:#fff}
-.pc.front .ring{width:50mm;height:50mm;border-radius:50%;background:conic-gradient(from 0deg,#e4002b,#ff8a00,#ffc72c,#00a651,#2f5bff,#ff1f8e,#e4002b);display:grid;place-items:center}
-.pc.front .inner{width:44mm;height:44mm;border-radius:50%;background:#fff;display:grid;place-items:center}
-.pc.front .qr{width:26mm;height:26mm}
-.pc.front .qr svg{width:100%;height:100%;display:block}
-.pc.back{color:#fff;padding:4mm;text-align:center;gap:1.2mm}
-.pc.back .country{font-size:3.2mm;text-transform:uppercase;letter-spacing:.5mm;font-weight:700}
-.pc.back .year{font-size:15mm;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
-.pc.back .artist{font-size:3.6mm;font-weight:700;line-height:1.15}
-.pc.back .title{font-size:3.6mm;font-style:italic;line-height:1.15}
-.pc.back .place{position:absolute;bottom:3mm;left:0;right:0;font-size:2.8mm;font-weight:700}
+.popts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.popts label{margin:0}
+.pchecks{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.pchecks label{margin:0}
 </style>
 </head>
 <body>
@@ -225,6 +233,17 @@ ol.steps li{margin:7px 0;font-size:14px}
       </div>
       <div class="progress"><div id="prog"></div></div>
       <p class="small muted" id="cardStats"></p>
+      <details style="margin-top:12px"><summary class="small"><b>Print settings</b></summary>
+        <div class="popts">
+          <label class="small" for="pSize">Card size (mm)<input type="text" inputmode="numeric" id="pSize" value="65"></label>
+          <label class="small" for="pFlip">Duplex flip<select id="pFlip"><option value="long">Long edge</option><option value="short">Short edge</option></select></label>
+        </div>
+        <div class="pchecks">
+          <label class="agree"><input type="checkbox" id="pCut" checked> <span>Dashed cutting lines</span></label>
+          <label class="agree"><input type="checkbox" id="pTint" checked> <span>Colour backs by year</span></label>
+          <label class="agree"><input type="checkbox" id="pNum" checked> <span>Card number under the QR code</span></label>
+        </div>
+      </details>
       <div class="cardprev" id="cardPreview" hidden></div>
     </div>
     <div class="card">
@@ -239,7 +258,7 @@ ol.steps li{margin:7px 0;font-size:14px}
     </div>
     <div class="card">
       <b>Add your own songs</b>
-      <p class="muted small">One per line: <code>year | country | artist | title | place</code>. Place is optional, use 1 for winners.</p>
+      <p class="muted small">One per line: <code>year | country | artist | title | place</code>. Place is optional, use 1 for winners. Your own songs get card numbers C001, C002 and so on, so keep them in the same order once printed.</p>
       <textarea id="customSongs" placeholder="2013 | Denmark | Emmelie de Forest | Only Teardrops | 1"></textarea>
       <p><button class="btn" id="saveCustom">Save songs</button></p>
     </div>
@@ -1627,884 +1646,884 @@ return M['index'];})();
 <script>
 /* ---------- Song data: year | country | artist | title | place ---------- */
 const BUILTIN = `
-1956|Switzerland|Lys Assia|Refrain|1
-1957|Netherlands|Corry Brokken|Net Als Toen|1
-1957|France|Paule Desjardins|La Belle Amour|2
-1957|Denmark|Birthe Wilke & Gustav Winckler|Skibet Skal Sejle I Nat|3
-1957|Germany|Margot Hielscher|Telefon, Telefon|4=
-1957|Luxembourg|Danièle Dupré|Amours Mortes (Tant De Peine)|4=
-1958|France|André Claveau|Dors Mon Amour|1
-1958|Switzerland|Lys Assia|Giorgio|2
-1958|Italy|Domenico Modugno|Nel Blu Dipinto Di Blu|3
-1958|Sweden|Alice Babs|Lilla Stjärna|4
-1958|Austria|Liane Augustin|Die Ganze Welt Braucht Liebe|5=
-1958|Belgium|Fud Leclerc|Ma Petite Chatte|5=
-1959|Netherlands|Teddy Scholten|Een Beetje|1
-1959|United Kingdom|Pearl Carr & Teddy Johnson|Sing Little Birdie|2
-1959|France|Jean Philippe|Oui, Oui, Oui, Oui|3
-1959|Switzerland|Christa Williams|Irgendwoher|4
-1959|Denmark|Birthe Wilke|Uh, Jeg Ville Ønske Jeg Var Dig|5
-1960|France|Jacqueline Boyer|Tom Pillibi|1
-1960|United Kingdom|Bryan Johnson|Looking High, High, High|2
-1960|Monaco|François Deguelt|Ce Soir-là|3
-1960|Germany|Wyn Hoop|Bonne Nuit, Ma Chérie!|4=
-1960|Norway|Nora Brockstedt|Voi-voi|4=
-1961|Luxembourg|Jean-Claude Pascal|Nous Les Amoureux|1
-1961|United Kingdom|The Allisons|Are You Sure?|2
-1961|Switzerland|Franca di Rienzo|Nous Aurons Demain|3
-1961|France|Jean-Paul Mauric|Printemps (avril Carillonne)|4
-1961|Denmark|Dario Campeotto|Angelique|5=
-1961|Italy|Betty Curtis|Al Di Là|5=
-1962|France|Isabelle Aubret|Un Premier Amour|1
-1962|Monaco|François Deguelt|Dis Rien|2
-1962|Luxembourg|Camillo Felgen|Petit Bonhomme|3
-1962|United Kingdom|Ronnie Carroll|Ring-a-ding Girl|4=
-1962|Yugoslavia|Lola Novaković|Ne Pali Svetlo U Sumrak|4=
-1963|Denmark|Grethe & Jørgen Ingmann|Dansevise|1
-1963|Switzerland|Esther Ofarim|T'en Va Pas|2
-1963|Italy|Emilio Pericoli|Uno Per Tutte|3
-1963|United Kingdom|Ronnie Carroll|Say Wonderful Things|4
-1963|France|Alain Barrière|Elle était Si Jolie|5=
-1963|Monaco|Françoise Hardy|L'amour S'en Va|5=
-1964|Italy|Gigliola Cinquetti|Non Ho L'étà|1
-1964|United Kingdom|Matt Monro|I Love The Little Things|2
-1964|Monaco|Romuald|Où Sont-elles Passées?|3
-1964|France|Rachel|Le Chant De Mallory|4=
-1964|Luxembourg|Hugues Aufray|Dès Que Le Printemps Revient|4=
-1965|Luxembourg|France Gall|Poupée De Cire, Poupée De Son|1
-1965|United Kingdom|Kathy Kirby|I Belong|2
-1965|France|Guy Mardel|N'avoue Jamais|3
-1965|Austria|Udo Jürgens|Sag Ihr, Ich Lass' Sie Grüßen|4
-1965|Italy|Bobby Solo|Se Piangi, Se Ridi|5
-1966|Austria|Udo Jürgens|Merci Chérie|1
-1966|Sweden|Lill Lindfors & Svante Thuresson|Nygammal Vals|2
-1966|Norway|Åse Kleveland|Intet Er Nytt Under Solen|3
-1966|Belgium|Tonia|Un Peu De Poivre, Un Peu De Sel|4=
-1966|Ireland|Dickie Rock|Come Back To Stay|4=
-1967|United Kingdom|Sandie Shaw|Puppet On A String|1
-1967|Ireland|Sean Dunphy|If I Could Choose|2
-1967|France|Noëlle Cordier|Il Doit Faire Beau Là-bas|3
-1967|Luxembourg|Vicky|L'amour Est Bleu|4
-1967|Monaco|Minouche Barelli|Boum-badaboum|5
-1968|Spain|Massiel|La, La, La...|1
-1968|United Kingdom|Cliff Richard|Congratulations|2
-1968|France|Isabelle Aubret|La Source|3
-1968|Ireland|Pat McGeegan|Chance Of A Lifetime|4
-1968|Sweden|Claes-Göran Hederström|Det Börjar Verka Kärlek, Banne Mej|5
-1969|France|Frida Boccara|Un Jour, Un Enfant|1=
-1969|Netherlands|Lenny Kuhr|De Troubadour|1=
-1969|Spain|Salomé|Vivo Cantando|1=
-1969|United Kingdom|Lulu|Boom Bang-a-bang|1=
-1969|Switzerland|Paola del Medico|Bonjour, Bonjour|5
-1970|Ireland|Dana|All Kinds Of Everything|1
-1970|United Kingdom|Mary Hopkin|Knock, Knock (who's there?)|2
-1970|Germany|Katja Ebstein|Wunder Gibt Es Immer Wieder|3
-1970|France|Guy Bonnet|Marie Blanche|4=
-1970|Spain|Julio Iglesias|Gwendolyne|4=
-1970|Switzerland|Henri Dès|Retour|4=
-1971|Monaco|Séverine|Un Banc, Un Arbre, Une Rue|1
-1971|Spain|Karina|En Un Mundo Nuevo|2
-1971|Germany|Katja Ebstein|Diese Welt|3
-1971|United Kingdom|Clodagh Rodgers|Jack In The Box|4
-1971|Italy|Massimo Ranieri|L'amore è Un Attimo|5
-1972|Luxembourg|Vicky Leandros|Après Toi|1
-1972|United Kingdom|The New Seekers|Beg, Steal Or Borrow|2
-1972|Germany|Mary Roos|Nur Die Liebe Läßt Uns Leben|3
-1972|Netherlands|Sandra and Andres|Als Het Om De Liefde Gaat|4
-1972|Austria|The Milestones|Falter Im Wind|5
-1973|Luxembourg|Anne-Marie David|Tu Te Reconnaîtras|1
-1973|Spain|Mocedades|Eres Tú|2
-1973|United Kingdom|Cliff Richard|Power To All Our Friends|3
-1973|Israel|Ilanit|Ey-sham|4
-1973|Sweden|The Nova and The Dolls|You're Summer|5
-1974|Sweden|ABBA|Waterloo|1
-1974|Italy|Gigliola Cinquetti|Si|2
-1974|Netherlands|Mouth and MacNeal|I See A Star|3
-1974|Luxembourg|Ireen Sheer|Bye, Bye, I Love You|4=
-1974|Monaco|Romuald|Celui Qui Reste Et Celui Qui S'en Va|4=
-1974|United Kingdom|Olivia Newton-John|Long Live Love|4=
-1975|Netherlands|Teach-In|Ding-A-Dong|1
-1975|United Kingdom|The Shadows|Let Me Be The One|2
-1975|Italy|Wess & Dori Ghezzi|Era|3
-1975|France|Nicole Rieu|Et Bonjour à Toi L'artiste|4
-1975|Luxembourg|Géraldine|Toi|5
-1976|United Kingdom|Brotherhood of Man|Save Your Kisses For Me|1
-1976|France|Catherine Ferry|Un, Deux, Trois|2
-1976|Monaco|Mary Christy|Toi, La Musique Et Moi|3
-1976|Switzerland|Peter, Sue and Marc|Djambo, Djambo|4
-1976|Austria|Waterloo and Robinson|My Little World|5
-1977|France|Marie Myriam|L'oiseau Et L'enfant|1
-1977|United Kingdom|Lynsey de Paul and Mike Moran|Rock Bottom|2
-1977|Ireland|The Swarbriggs Plus Two|It's Nice To Be In Love Again|3
-1977|Monaco|Michèle Torr|Une Petite Française|4
-1977|Greece|Pascalis, Marianna, Robert and Bessy|Mathima Solfez|5
-1978|Israel|Izhar Cohen and the Alphabeta|A-Ba-Ni-Bi|1
-1978|Belgium|Jean Vallée|L'amour ça Fait Chanter La Vie|2
-1978|France|Joël Prévost|Il Y Aura Toujours Des Violons|3
-1978|Monaco|Caline and Olivier Toussaint|Les Jardins De Monaco|4
-1978|Ireland|Colm T. Wilkinson|Born To Sing|5
-1979|Israel|Milk and Honey|Hallelujah|1
-1979|Spain|Betty Missiego|Su Canción|2
-1979|France|Anne-Marie David|Je Suis L'enfant-soleil|3
-1979|Germany|Dschinghis Khan|NA|4
-1979|Ireland|Cathal Dunne|Happy Man|5
-1980|Ireland|Johnny Logan|What's Another Year|1
-1980|Germany|Katja Ebstein|Theater|2
-1980|United Kingdom|Prima Donna|Love Enough For Two|3
-1980|Switzerland|Paola|Cinéma|4
-1980|Netherlands|Maggie MacNeal|Amsterdam|5
-1981|United Kingdom|Bucks Fizz|Making Your Mind Up|1
-1981|Germany|Lena Valaitis|Johnny Blue|2
-1981|France|Jean Gabilou|Humanahum|3
-1981|Switzerland|Peter, Sue and Marc|Io Senza Tei|4
-1981|Ireland|Sheeba|Horoscopes|5
-1982|Germany|Nicole|Ein Bißchen Frieden|1
-1982|Israel|Avi Toledano|Hora|2
-1982|Switzerland|Arlette Zola|Amour On T'aime|3
-1982|Belgium|Stella|Si Tu Aimes Ma Musique|4
-1982|Cyprus|Anna Vissi|Mono I Agapi|5
-1983|Luxembourg|Corinne Hermès|Si La Vie Est Cadeau|1
-1983|Israel|Ofra Haza|Hi|2
-1983|Sweden|Carola Häggkvist|Främling|3
-1983|Yugoslavia|Danijel|Dzuli|4
-1983|Germany|Hoffmann und Hoffmann|Rücksicht|5
-1984|Sweden|Herrey's|Diggi-loo Diggy-ley|1
-1984|Ireland|Linda Martin|Terminal '3'|2
-1984|Spain|Bravo|Lady, Lady|3
-1984|Denmark|Hot Eyes|Det' Lige Det|4
-1984|Belgium|Jacques Zegers|Avanti La Vie|5=
-1984|Italy|Alice and Battiato|I Treni Di Tozeur|5=
-1985|Norway|Bobbysocks|La Det Swinge|1
-1985|Germany|Wind|Für Alle|2
-1985|Sweden|Kikki Danielsson|Bra Vibrationer|3
-1985|United Kingdom|Vikki|Love Is...|4
-1985|Israel|Izhar Cohen|Olé Olé|5
-1986|Belgium|Sandra Kim|J'aime La Vie|1
-1986|Switzerland|Daniela Simons|Pas Pour Moi|2
-1986|Luxembourg|Sherisse Laurence|L'amour De Ma Vie|3
-1986|Ireland|Luv Bug|You Can Count On Me|4
-1986|Sweden|Lasse Holm & Monica Törnell|E' De' Det Här Du Kallar Kärlek|5
-1987|Ireland|Johnny Logan|Hold Me Now|1
-1987|Germany|Wind|Laß Die Sonne In Dein Herz|2
-1987|Italy|Umberto Tozzi and Raf|Gente Di Mare|3
-1987|Yugoslavia|Novi Fosili|Ja Sam Za Ples|4
-1987|Denmark|Anne-Cathrine Herdorf|En Lille Melodi|5=
-1987|Netherlands|Marcha|Rechtop In De Wind|5=
-1988|Switzerland|Céline Dion|Ne Partez Pas Sans Moi|1
-1988|United Kingdom|Scott Fitzgerald|Go|2
-1988|Denmark|Kirsten & Søren|Ka' Du Se Hva' Jeg Sa'|3
-1988|Luxembourg|Lara Fabian|Croire|4
-1988|Norway|Karoline Krüger|For Vår Jord|5
-1989|Yugoslavia|Riva|Rock Me|1
-1989|United Kingdom|Live Report|Why Do I Always Get It Wrong|2
-1989|Denmark|Birthe Kjær|Vi Maler Byen Rød|3
-1989|Sweden|Tommy Nilsson|En Dag|4
-1989|Austria|Thomas Forstner|Nur Ein Lied|5
-1990|Italy|Toto Cutugno|Insieme: 1992|1
-1990|France|Joelle Ursull|White And Black Blues|2=
-1990|Ireland|Liam Reilly|Somewhere In Europe|2=
-1990|Iceland|Stjórnin|Eitt Lag Enn|4
-1990|Spain|Azúcar Moreno|Bandido|5
-1991|Sweden|Carola|Fångad Av En Stormvind|1
-1991|France|Amina|C'est Le Dernier Qui A Parlé Qui A Raison|2
-1991|Israel|Duo Datz|Kan|3
-1991|Spain|Sergio Dalma|Bailar Pegados|4
-1991|Switzerland|Sandra Simò|Canzone Per Te|5
-1992|Ireland|Linda Martin|Why Me|1
-1992|United Kingdom|Michael Ball|One Step Out Of Time|2
-1992|Malta|Mary Spiteri|Little Child|3
-1992|Italy|Mia Martini|Rapsodia|4
-1992|Greece|Cleopatra|Olou Tou Kosmou tin Elpida|5
-1993|Ireland|Niamh Kavanagh|In Your Eyes|1
-1993|United Kingdom|Sonia|Better The Devil You Know|2
-1993|Switzerland|Annie Cotton|Moi, Tout Simplement|3
-1993|France|Patrick Fiori|Mama Corsica|4
-1993|Norway|Silje Vige|Alle Mine Tankar|5
-1994|Ireland|Paul Harrington & Charlie McGettigan|Rock 'n' Roll Kids|1
-1994|Poland|Edyta Górniak|To Nie Ja!|2
-1994|Germany|MeKaDo|Wir Geben 'ne Party|3
-1994|Hungary|Friderika Bayer|Kinek Mondjam El Vétkeimet|4
-1994|Malta|Moira Stafrace and Christopher Scicluna|More Than Love|5
-1995|Norway|Secret Garden|Nocturne|1
-1995|Spain|Anabel Conde|Vuelve Conmigo|2
-1995|Sweden|Jan Johansen|Se På Mej|3
-1995|France|Nathalie Santamaria|Il Me Donne Rendez-vous|4
-1995|Denmark|Aud Wilken|Fra Mols Til Skagen|5
-1996|Ireland|Eimear Quinn|The Voice|1
-1996|Norway|Elisabeth Andreasson|I Evighet|2
-1996|Sweden|One More Time|Den Vilda|3
-1996|Croatia|Maja Blagdan|Sveta Ljubav|4
-1996|Estonia|Ivo Linna and Maarja-Liis Ilus|Kaelakee Hääl|5
-1997|United Kingdom|Katrina and The Waves|Love Shine A Light|1
-1997|Ireland|Marc Roberts|Mysterious Woman|2
-1997|Turkey|Sebnem Paker and Group Etnic|Dinle|3
-1997|Italy|Jalisse|Fiumi Di Parole|4
-1997|Cyprus|Chara and Andreas Konstantinou|Mana Mou|5
-1998|Israel|Dana International|Diva|1
-1998|United Kingdom|Imaani|Where Are You?|2
-1998|Malta|Chiara|The One That I Love|3
-1998|Netherlands|Edsilia Rombley|Hemel En Aarde|4
-1998|Croatia|Danijela|Neka Mi Ne Svane|5
-1999|Sweden|Charlotte Nilsson|Take Me To Your Heaven|1
-1999|Iceland|Selma Björnsdóttir|All Out Of Luck|2
-1999|Germany|Sürpriz|Reise Nach Jerusalem - Kudüs'e Seyahat|3
-1999|Croatia|Doris Dragović|Marija Magdalena|4
-1999|Israel|Eden|Yom Huledeth|5
-2000|Denmark|Olsen brothers|Fly On The Wings Of Love|1
-2000|Russia|Alsou|Solo|2
-2000|Latvia|BrainStorm|My Star|3
-2000|Estonia|Ines|Once In A Lifetime|4
-2000|Germany|Stefan Raab|Wadde Hadde Dudde Da|5
-2000|Ireland|Eamonn Toal|Millennium Of Love|6
-2000|Sweden|Roger Pontare|When Spirits Are Calling My Name|7
-2000|Malta|Claudette Pace|Desire|8
-2000|Croatia|Goran Karan|Kada Zaspu Andeli|9
-2000|Turkey|Pinar Ayhan & S.O.S. band|Yorgunum Anla|10
-2000|Norway|Charmed|My Heart Goes Boom|11
-2000|Iceland|August & Telma|Tell Me!|12
-2000|Netherlands|Linda Wagenmakers|No Goodbyes|13
-2000|Austria|The rounder girls|All To You|14
-2000|North Macedonia|XXL|100% Te Ljubam|15
-2000|United Kingdom|Nicki French|Don't Play That Song Again|16
-2000|Romania|Taxi|The Moon|17
-2000|Finland|Nina Åström|A Little Bit|18=
-2000|Spain|Serafín Zubiri|Colgado De Un Sueño|18=
-2000|Switzerland|Jane Bogaert|La Vita Cos'è?|20
-2000|Cyprus|Voice|Nomiza|21
-2000|Israel|Ping Pong|Sa'me'akh|22
-2000|France|Sofia Mestari|On Aura Le Ciel|23
-2000|Belgium|Nathalie Sorce|Envie De Vivre|24
-2001|Estonia|Tanel Padar, Dave Benton & 2XL|Everybody|1
-2001|Denmark|Rollo & King|Never Ever Let You Go|2
-2001|Greece|Antique|Die For You|3
-2001|France|Natasha Saint-Pier|Je N'ai Que Mon âme|4
-2001|Sweden|Friends|Listen To Your Heartbeat|5
-2001|Spain|David Civera|Dile Que La Quiero|6
-2001|Slovenia|Nuša Derenda|Energy|7
-2001|Germany|Michelle|Wer Liebe Lebt|8
-2001|Malta|Fabrizio Faniello|Another Summer Night|9
-2001|Croatia|Vanna|Strings Of My Heart|10
-2001|Turkey|Sedat Yüce|Sevgiliye Son|11
-2001|Russia|Mumiy troll|Lady Alpine Blue|12
-2001|Lithuania|Skamp|You Got Style|13
-2001|Bosnia & Herzegovina|Nino|Hano|14
-2001|United Kingdom|Lindsay D.|No Dream Impossible|15
-2001|Israel|Tal Sondak|Ein Davar|16
-2001|Portugal|MTM|Só Sei Ser Feliz Assim|17
-2001|Latvia|Arnis Mednis|Too Much|18=
-2001|Netherlands|Michelle|Out On My Own|18=
-2001|Poland|Piasek|2 Long|20
-2001|Ireland|Gary O'Shaughnessy|Without Your Love|21
-2001|Iceland|TwoTricky|Angel|22=
-2001|Norway|Haldor Lægreid|On My Own|22=
-2002|Latvia|Marie N|I Wanna|1
-2002|Malta|Ira Losco|7th Wonder|2
-2002|Estonia|Sahléne|Runaway|3=
-2002|United Kingdom|Jessica Garlick|Come Back|3=
-2002|France|Sandrine François|Il Faut Du Temps|5
-2002|Cyprus|One|Gimme|6
-2002|Spain|Rosa|Europe's Living A Celebration|7
-2002|Sweden|Afro-dite|Never Let It Go|8
-2002|Romania|Monica Anghel & Marcel Pavel|Tell Me Why|9
-2002|Russia|Prime minister|Northern Girl|10
-2002|Croatia|Vesna Pisarovic|Everything I Want|11
-2002|Israel|Sarit Hadad|Light A Candle|12
-2002|Belgium|Sergio & the Ladies|Sister|13=
-2002|Bosnia & Herzegovina|Maja|Na Jastuku Za Dvoje|13=
-2002|Slovenia|Sestre|Samo Ljubezen|13=
-2002|Turkey|Buket Bengisu & Saphire|Leylaklar Soldu Kalbinde|16
-2002|Greece|Michalis Rakintzis|S.A.G.A.P.O.|17
-2002|Austria|Manuel Ortega|Say A Word|18
-2002|North Macedonia|Karolina|Od Nas Zavisi|19
-2002|Finland|Laura|Addicted To You|20
-2002|Germany|Corinna May|I Can't Live Without Music|21
-2002|Switzerland|Francine Jordi|Dans Le Jardin De Mon Âme|22
-2002|Lithuania|Aivaras|Happy You|23
-2002|Denmark|Malene|Tell Me Who You Are|24
-2003|Turkey|Sertab Erener|Everyway That I Can|1
-2003|Belgium|Urban Trad|Sanomi|2
-2003|Russia|t.A.T.u.|Ne Ver’, Ne Boisia|3
-2003|Norway|Jostein Hasselgård|I'm Not Afraid To Move On|4
-2003|Sweden|Fame|Give Me Your Love|5
-2003|Austria|Alf Poier|Weil Der Mensch Zählt|6
-2003|Poland|Ich Troje|Keine Grenzen - Zadnych Granic|7
-2003|Iceland|Birgitta|Open Your Heart|8
-2003|Spain|Beth|Dime|9
-2003|Romania|Nicola|Don’t Break My Heart|10
-2003|Germany|Lou|Let’s Get Happy|11
-2003|Ireland|Mickey Harte|We’'ve Got The World|12
-2003|Netherlands|Esther Hart|One More Night|13
-2003|Ukraine|Olexandr|Hasta La Vista|14
-2003|Croatia|Claudia Beni|Više Nisam Tvoja|15
-2003|Bosnia & Herzegovina|Mija Martina|Ne Brini|16
-2003|Greece|Mando|Never Let You Go|17
-2003|France|Louisa Baileche|Monts Et Merveilles|18
-2003|Israel|Lior Narkis|Words For Love|19
-2003|Cyprus|Stelios Constantas|Feeling Alive|20
-2003|Estonia|Ruffus|Eighties Coming Back|21
-2003|Portugal|Rita Guerra|Deixa-me Sonhar|22
-2003|Slovenia|Karmen|Nanana|23
-2003|Latvia|F.L.Y.|Hello From Mars|24
-2003|Malta|Lynn Chirchop|To Dream Again|25
-2003|United Kingdom|Jemini|Cry Baby|26
-2004|Ukraine|Ruslana|Wild Dances|1
-2004|Serbia and Montenegro|Željko Joksimović|Lane Moje|2
-2004|Greece|Sakis Rouvas|Shake It|3
-2004|Turkey|Athena|For Real|4
-2004|Cyprus|Lisa Andreas|Stronger Every Minute|5
-2004|Sweden|Lena Philipsson|It Hurts|6
-2004|Albania|Anjeza Shahini|The Image Of You|7
-2004|Germany|Max|Can't Wait Until Tonight|8
-2004|Bosnia & Herzegovina|Deen|In The Disco|9
-2004|Spain|Ramón|Para Llenarme De Ti|10
-2004|Russia|Julia Savicheva|Believe Me|11
-2004|Malta|Julie & Ludwig|On Again... Off Again|12
-2004|Croatia|Ivan Mikulic|You Are The Only One|13
-2004|North Macedonia|Tose Proeski|Life|14
-2004|France|Jonatan Cerrada|A Chaque Pas|15
-2004|United Kingdom|James Fox|Hold On To Our Love|16
-2004|Poland|Blue Cafe|Love Song|17
-2004|Romania|Sanda Ladosi|I Admit|18
-2004|Iceland|Jónsi|Heaven|19
-2004|Netherlands|Re-union|Without You|20
-2004|Austria|Tie Break|Du Bist|21
-2004|Belgium|Xandee|1 Life|22
-2004|Ireland|Chris Doran|If My World Stopped Turning|23
-2004|Norway|Knut Anders Sørum|High|24
-2005|Greece|Helena Paparizou|My Number One|1
-2005|Malta|Chiara|Angel|2
-2005|Romania|Luminita Anghel & Sistem|Let Me Try|3
-2005|Israel|Shiri Maymon|Hasheket Shenish'ar|4
-2005|Latvia|Walter & Kazha|The War Is Not Over|5
-2005|Moldova|Zdob şi Zdub|Boonika Bate Doba|6
-2005|Serbia and Montenegro|No Name|Zauvijek Moja|7
-2005|Switzerland|Vanilla Ninja|Cool Vibes|8
-2005|Norway|Wig Wam|In My Dreams|9
-2005|Denmark|Jakob Sveistrup|Talking To You|10
-2005|Croatia|Boris Novkovic feat. Lado members|Vukovi Umiru Sami|11
-2005|Hungary|NOX|Forogj Világ|12
-2005|Turkey|Gülseren|Rimi Rimi Ley|13
-2005|Bosnia & Herzegovina|Feminnem|Call Me|14
-2005|Russia|Natalia Podolskaya|Nobody Hurt No One|15
-2005|Albania|Ledina Celo|Tomorrow I Go|16
-2005|North Macedonia|Martin Vucic|Make My Day|17
-2005|Cyprus|Constantinos Christoforou|Ela Ela|18
-2005|Sweden|Martin Stenmarck|Las Vegas|19
-2005|Ukraine|Greenjolly|Razom Nas Bahato|20
-2005|Spain|Son de sol|Brujería|21
-2005|United Kingdom|Javine|Touch My Fire|22
-2005|France|Ortal|Chacun Pense à Soi|23
-2005|Germany|Gracia|Run & Hide|24
-2006|Finland|Lordi|Hard Rock Hallelujah|1
-2006|Russia|Dima Bilan|Never Let You Go|2
-2006|Bosnia & Herzegovina|Hari Mata Hari|Lejla|3
-2006|Romania|Mihai Traistariu|Tornero|4
-2006|Sweden|Carola|Invincible|5
-2006|Lithuania|LT United|We Are The Winners|6
-2006|Ukraine|Tina Karol|Show Me Your Love|7
-2006|Armenia|André|Without Your Love|8
-2006|Greece|Anna Vissi|Everything|9
-2006|Ireland|Brian Kennedy|Every Song Is A Cry For Love|10
-2006|Turkey|Sibel Tüzün|Superstar|11
-2006|North Macedonia|Elena Risteska|Ninanajna|12
-2006|Croatia|Severina|Moja štikla|13
-2006|Norway|Christine Guldbrandsen|Alvedansen|14
-2006|Germany|Texas Lightning|No, No, Never|15
-2006|Latvia|Cosmos|I Hear Your Heart|16
-2006|Switzerland|Six4One|If We All Give A Little|17
-2006|Denmark|Sidsel Ben Semmane|Twist Of Love|18
-2006|United Kingdom|Daz Sampson|Teenage Life|19
-2006|Moldova|Arsenium & Natalia Gordienko|Loca|20
-2006|Spain|Las Ketchup|Bloody Mary|21
-2006|France|Virginie Pouchin|Il était Temps|22
-2006|Israel|Eddie Butler|Ze Hazman|23
-2006|Malta|Fabrizio Faniello|I Do|24
-2007|Serbia|Marija Šerifović|Molitva|1
-2007|Ukraine|Verka Serduchka|Dancing Lasha Tumbai|2
-2007|Russia|Serebro|Song # 1|3
-2007|Turkey|Kenan Dogulu|Shake It Up Shekerim|4
-2007|Bulgaria|Elitsa Todorova & Stoyan Yankulov|Water|5
-2007|Belarus|Dmitry Koldun|Work Your Magic|6
-2007|Greece|Sarbel|Yassou Maria|7
-2007|Armenia|Hayko|Anytime You Need|8
-2007|Hungary|Magdi Rúzsa|Unsubstantial Blues|9
-2007|Moldova|Natalia Barbu|Fight|10
-2007|Bosnia & Herzegovina|Marija Sestic|Rijeka Bez Imena|11
-2007|Georgia|Sopho|Visionary Dream|12
-2007|Romania|Todomondo|Liubi, Liubi, I Love You|13
-2007|North Macedonia|Karolina|Mojot Svet|14
-2007|Slovenia|Alenka Gotar|Cvet Z Juga|15
-2007|Latvia|Bonaparti.lv|Questa Notte|16
-2007|Finland|Hanna Pakarinen|Leave Me Alone|17
-2007|Sweden|The Ark|The Worrying Kind|18
-2007|Germany|Roger Cicero|Frauen Regieren Die Welt|19
-2007|Spain|NASH|I Love You Mi Vida|20
-2007|Lithuania|4Fun|Love Or Leave|21
-2007|France|Les Fatals Picards|L'amour à La Française|22
-2007|United Kingdom|Scooch|Flying The Flag (for You)|23
-2007|Ireland|Dervish|They Can't Stop The Spring|24
-2008|Russia|Dima Bilan|Believe|1
-2008|Ukraine|Ani Lorak|Shady Lady|2
-2008|Greece|Kalomira|Secret Combination|3
-2008|Armenia|Sirusho|Qele, Qele|4
-2008|Norway|Maria|Hold On Be Strong|5
-2008|Serbia|Jelena Tomašević feat. Bora Dugic|Oro|6
-2008|Turkey|Mor ve Ötesi|Deli|7
-2008|Azerbaijan|Elnur & Samir|Day After Day|8
-2008|Israel|Boaz|The Fire In Your Eyes|9
-2008|Bosnia & Herzegovina|Laka|Pokušaj|10
-2008|Georgia|Diana Gurtskaya|Peace Will Come|11
-2008|Latvia|Pirates Of The Sea|Wolves Of The Sea|12
-2008|Portugal|Vânia Fernandes|Senhora Do Mar (Negras Águas)|13
-2008|Iceland|Euroband|This Is My Life|14
-2008|Denmark|Simon Mathew|All Night Long|15
-2008|Spain|Rodolfo Chikilicuatre|Baila El Chiki Chiki|16
-2008|Albania|Olta Boka|Zemrën E Lamë Peng|17
-2008|Sweden|Charlotte Perrelli|Hero|18
-2008|France|Sébastien Tellier|Divine|19
-2008|Romania|Nico & Vlad|Pe-o Margine De Lume|20
-2008|Croatia|Kraljevi Ulice & 75 Cents|Romanca|21
-2008|Finland|Teräsbetoni|Missä Miehet Ratsastaa|22
-2008|Germany|No Angels|Disappear|23
-2008|Poland|Isis Gee|For Life|24
-2008|United Kingdom|Andy Abraham|Even If|25
-2009|Norway|Alexander Rybak|Fairytale|1
-2009|Iceland|Yohanna|Is It True?|2
-2009|Azerbaijan|AySel & Arash|Always|3
-2009|Turkey|Hadise|Düm Tek Tek|4
-2009|United Kingdom|Jade Ewen|It's My Time|5
-2009|Estonia|Urban Symphony|Rändajad|6
-2009|Greece|Sakis Rouvas|This Is Our Night|7
-2009|France|Patricia Kaas|Et S'il Fallait Le Faire|8
-2009|Bosnia & Herzegovina|Regina|Bistra Voda|9
-2009|Armenia|Inga & Anush|Jan Jan|10
-2009|Russia|Anastasia Prikhodko|Mamo|11
-2009|Ukraine|Svetlana Loboda|Be my Valentine! (Anti-crisis Girl)|12
-2009|Denmark|Brinck|Believe Again|13
-2009|Moldova|Nelly Ciobanu|Hora Din Moldova|14
-2009|Portugal|Flor-de-lis|Todas As Ruas Do Amor|15
-2009|Israel|Noa & Mira Awad|There Must Be Another Way|16
-2009|Albania|Kejsi Tola|Carry Me In Your Dreams|17
-2009|Croatia|Igor Cukrov feat. Andrea|Lijepa Tena|18
-2009|Romania|Elena|The Balkan Girls|19
-2009|Germany|Alex Swings Oscar Sings!|Miss Kiss Kiss Bang|20
-2009|Sweden|Malena Ernman|La Voix|21
-2009|Malta|Chiara|What If We|22
-2009|Lithuania|Sasha Son|Love|23
-2009|Spain|Soraya|La Noche Es Para Mí (The Night Is For Me)|24
-2009|Finland|Waldo's People|Lose Control|25
-2010|Germany|Lena|Satellite|1
-2010|Turkey|maNga|We Could Be The Same|2
-2010|Romania|Paula Seling & Ovi|Playing With Fire|3
-2010|Denmark|Chanée & N'evergreen|In A Moment Like This|4
-2010|Azerbaijan|Safura|Drip Drop|5
-2010|Belgium|Tom Dice|Me And My Guitar|6
-2010|Armenia|Eva Rivas|Apricot Stone|7
-2010|Greece|Giorgos Alkaios & Friends|OPA|8
-2010|Georgia|Sofia Nizharadze|Shine|9
-2010|Ukraine|Alyosha|Sweet People|10
-2010|Russia|Peter Nalitch & Friends|Lost And Forgotten|11
-2010|France|Jessy Matador|Allez Olla Olé|12
-2010|Serbia|Milan Stanković|Ovo Je Balkan|13
-2010|Israel|Harel Skaat|Milim|14
-2010|Spain|Daniel Diges|Algo Pequeñito|15
-2010|Albania|Juliana Pasha|It's All About You|16
-2010|Bosnia & Herzegovina|Vukašin Brajić|Thunder and Lightning|17
-2010|Portugal|Filipa Azevedo|Há Dias Assim|18
-2010|Iceland|Hera Björk|Je Ne Sais Quoi|19
-2010|Norway|Didrik Solli-Tangen|My Heart Is Yours|20
-2010|Cyprus|Jon Lilygreen & The Islanders|Life Looks Better In Spring|21
-2010|Moldova|Sunstroke Project & Olia Tira|Run Away|22
-2010|Ireland|Niamh Kavanagh|It's For You|23
-2010|Belarus|3+2|Butterflies|24
-2010|United Kingdom|Josh|That Sounds Good To Me|25
-2011|Azerbaijan|Ell/Nikki|Running Scared|1
-2011|Italy|Raphael Gualazzi|Madness Of Love|2
-2011|Sweden|Eric Saade|Popular|3
-2011|Ukraine|Mika Newton|Angel|4
-2011|Denmark|A Friend In London|New Tomorrow|5
-2011|Bosnia & Herzegovina|Dino Merlin|Love In Rewind|6
-2011|Greece|Loucas Yiorkas feat. Stereo Mike|Watch My Dance|7
-2011|Ireland|Jedward|Lipstick|8
-2011|Georgia|Eldrine|One More Day|9
-2011|Germany|Lena|Taken By A Stranger|10
-2011|United Kingdom|Blue|I Can|11
-2011|Moldova|Zdob și Zdub|So Lucky|12
-2011|Slovenia|Maja Keuc|No One|13
-2011|Serbia|Nina|Čaroban|14
-2011|France|Amaury Vassili|Sognu|15
-2011|Russia|Alexej Vorobjov|Get You|16
-2011|Romania|Hotel FM|Change|17
-2011|Austria|Nadine Beiler|The Secret Is Love|18
-2011|Lithuania|Evelina Sašenko|C'est Ma Vie|19
-2011|Iceland|Sjonni's Friends|Coming Home|20
-2011|Finland|Paradise Oskar|Da Da Dam|21
-2011|Hungary|Kati Wolf|What About My Dreams?|22
-2011|Spain|Lucía Pérez|Que Me Quiten Lo Bailao|23
-2011|Estonia|Getter Jaani|Rockefeller Street|24
-2011|Switzerland|Anna Rossinelli|In Love For A While|25
-2012|Sweden|Loreen|Euphoria|1
-2012|Russia|Buranovskiye Babushki|Party For Everybody|2
-2012|Serbia|Željko Joksimović|Nije Ljubav Stvar|3
-2012|Azerbaijan|Sabina Babayeva|When The Music Dies|4
-2012|Albania|Rona Nishliu|Suus|5
-2012|Estonia|Ott Lepland|Kuula|6
-2012|Turkey|Can Bonomo|Love Me Back|7
-2012|Germany|Roman Lob|Standing Still|8
-2012|Italy|Nina Zilli|L'Amore È Femmina (Out Of Love)|9
-2012|Spain|Pastora Soler|Quédate Conmigo|10
-2012|Moldova|Pasha Parfeny|Lăutar|11
-2012|Romania|Mandinga|Zaleilah|12
-2012|North Macedonia|Kaliopi|Crno I Belo|13
-2012|Lithuania|Donny Montell|Love Is Blind|14
-2012|Ukraine|Gaitana|Be My Guest|15
-2012|Cyprus|Ivi Adamou|La La Love|16
-2012|Greece|Eleftheria Eleftheriou|Aphrodisiac|17
-2012|Bosnia & Herzegovina|Maya Sar|Korake Ti Znam|18
-2012|Ireland|Jedward|Waterline|19
-2012|Iceland|Greta Salóme & Jónsi|Never Forget|20
-2012|Malta|Kurt Calleja|This Is The Night|21
-2012|France|Anggun|Echo (You And I)|22
-2012|Denmark|Soluna Samay|Should've Known Better|23
-2012|Hungary|Compact Disco|Sound Of Our Hearts|24
-2012|United Kingdom|Engelbert Humperdinck|Love Will Set You Free|25
-2012|Norway|Tooji|Stay|26
-2013|Denmark|Emmelie de Forest|Only Teardrops|1
-2013|Azerbaijan|Farid Mammadov|Hold Me|2
-2013|Ukraine|Zlata Ognevich|Gravity|3
-2013|Norway|Margaret Berger|I Feed You My Love|4
-2013|Russia|Dina Garipova|What If|5
-2013|Greece|Koza Mostra feat. Agathon Iakovidis|Alcohol Is Free|6
-2013|Italy|Marco Mengoni|L'Essenziale|7
-2013|Malta|Gianluca|Tomorrow|8
-2013|Netherlands|Anouk|Birds|9
-2013|Hungary|ByeAlex|Kedvesem|10
-2013|Moldova|Aliona Moon|O Mie|11
-2013|Belgium|Roberto Bellarosa|Love Kills|12
-2013|Romania|Cezar|It's My Life|13
-2013|Sweden|Robin Stjernberg|You|14
-2013|Georgia|Nodi Tatishvili & Sophie Gelovani|Waterfall|15
-2013|Belarus|Alyona Lanskaya|Solayoh|16
-2013|Iceland|Eythor Ingi|Ég Á Líf|17
-2013|Armenia|Dorians|Lonely Planet|18
-2013|United Kingdom|Bonnie Tyler|Believe In Me|19
-2013|Estonia|Birgit|Et Uus Saaks Alguse|20
-2013|Germany|Cascada|Glorious|21
-2013|Lithuania|Andrius Pojavis|Something|22
-2013|France|Amandine Bourgeois|L'enfer Et Moi|23
-2013|Finland|Krista Siegfrids|Marry Me|24
-2013|Spain|ESDM|Contigo Hasta El Final (With You Until The End)|25
-2013|Ireland|Ryan Dolan|Only Love Survives|26
-2014|Austria|Conchita Wurst|Rise Like a Phoenix|1
-2014|Netherlands|The Common Linnets|Calm After The Storm|2
-2014|Sweden|Sanna Nielsen|Undo|3
-2014|Armenia|Aram MP3|Not Alone|4
-2014|Hungary|András Kállay-Saunders|Running|5
-2014|Ukraine|Mariya Yaremchuk|Tick - Tock|6
-2014|Russia|Tolmachevy Sisters|Shine|7
-2014|Norway|Carl Espen|Silent Storm|8
-2014|Denmark|Basim|Cliche Love Song|9
-2014|Spain|Ruth Lorenzo|Dancing in the rain|10
-2014|Finland|Softengine|Something Better|11
-2014|Romania|Paula Seling & OVI|Miracle|12
-2014|Switzerland|Sebalter|Hunter Of Stars|13
-2014|Poland|Donatan & Cleo|My Słowianie - We Are Slavic|14
-2014|Iceland|Pollapönk|No Prejudice|15
-2014|Belarus|Teo|Cheesecake|16
-2014|United Kingdom|Molly|Children of the Universe|17
-2014|Germany|Elaiza|Is It Right|18
-2014|Montenegro|Sergej Ćetković|Moj Svijet|19
-2014|Greece|Freaky Fortune feat. RiskyKidd|Rise Up|20
-2014|Italy|Emma|La Mia Città|21
-2014|Azerbaijan|Dilara Kazimova|Start A Fire|22
-2014|Malta|Firelight|Coming Home|23
-2014|San Marino|Valentina Monetta|Maybe (Forse)|24
-2014|Slovenia|Tinkara Kovač|Round and Round|25
-2014|France|TWIN TWIN|Moustache|26
-2015|Sweden|Måns Zelmerlöw|Heroes|1
-2015|Russia|Polina Gagarina|A Million Voices|2
-2015|Italy|Il Volo|Grande Amore|3
-2015|Belgium|Loïc Nottet|Rhythm Inside|4
-2015|Australia|Guy Sebastian|Tonight Again|5
-2015|Latvia|Aminata Savadogo|Love Injected|6
-2015|Estonia|Elina Born & Stig Rästa|Goodbye to Yesterday|7
-2015|Norway|Mørland & Debrah Scarlett|A Monster Like Me|8
-2015|Israel|Nadav Guedj|Golden Boy|9
-2015|Serbia|Bojana Stamenov|Beauty Never Lies|10
-2015|Georgia|Nina Sublatti|Warrior|11
-2015|Azerbaijan|Elnur Hüseynov|Hour Of The Wolf|12
-2015|Montenegro|Knez|Adio|13
-2015|Slovenia|Maraaya|Here for You|14
-2015|Romania|Voltaj|De La Capăt / All Over Again|15
-2015|Armenia|Genealogy|Face The Shadow|16
-2015|Albania|Elhaida Dani|I'm Alive|17
-2015|Lithuania|Monika & Vaidas|This Time|18
-2015|Greece|Maria Elena Kyriakou|One Last Breath|19
-2015|Hungary|Boggie|Wars For Nothing|20
-2015|Spain|Edurne|Amanecer|21
-2015|Cyprus|John Karayiannis|One Thing I Should Have Done|22
-2015|Poland|Monika Kuszyńska|In The Name Of Love|23
-2015|United Kingdom|Electro Velvet|Still in Love with You|24
-2015|France|Lisa Angell|N’oubliez pas|25
-2015|Austria|The Makemakes|I Am Yours|26
-2015|Germany|Ann Sophie|Black Smoke|27
-2016|Ukraine|Jamala|1944|1
-2016|Australia|Dami Im|Sound of Silence|2
-2016|Russia|Sergey Lazarev|You Are the Only One|3
-2016|Bulgaria|Poli Genova|If Love Was a Crime|4
-2016|Sweden|Frans|If I Were Sorry|5
-2016|France|Amir|J'ai Cherché|6
-2016|Armenia|Iveta Mukuchyan|LoveWave|7
-2016|Poland|Michał Szpak|Color of Your Life|8
-2016|Lithuania|Donny Montell|I've Been Waiting for This Night|9
-2016|Belgium|Laura Tesoro|What's the Pressure|10
-2016|Netherlands|Douwe Bob|Slow Down|11
-2016|Malta|Ira Losco|Walk on Water|12
-2016|Austria|Zoë|Loin d'ici|13
-2016|Israel|Hovi Star|Made of Stars|14
-2016|Latvia|Justs|Heartbeat|15
-2016|Italy|Francesca Michielin|No Degree of Separation|16
-2016|Azerbaijan|Samra|Miracle|17
-2016|Serbia|Sanja Vučić ZAA|Goodbye (Shelter)|18
-2016|Hungary|Freddie|Pioneer|19
-2016|Georgia|Nika Kocharov & Young Georgian Lolitaz|Midnight Gold|20
-2016|Cyprus|Minus One|Alter Ego|21
-2016|Spain|Barei|Say Yay!|22
-2016|Croatia|Nina Kraljić|Lighthouse|23
-2016|United Kingdom|Joe & Jake|You're Not Alone|24
-2016|Czechia|Gabriela Gunčíková|I Stand|25
-2016|Germany|Jamie-Lee Kriewitz|Ghost|26
-2017|Portugal|Salvador Sobral|Amar Pelos Dois|1
-2017|Bulgaria|Kristian Kostov|Beautiful Mess|2
-2017|Moldova|Sunstroke Project|Hey Mamma|3
-2017|Belgium|Blanche|City Lights|4
-2017|Sweden|Robin Bengtsson|I Can't Go On|5
-2017|Italy|Francesco Gabbani|Occidentali's Karma|6
-2017|Romania|Ilinca feat. Alex Florea|Yodel It!|7
-2017|Hungary|Joci Pápai|Origo|8
-2017|Australia|Isaiah Firebrace|Don't Come Easy|9
-2017|Norway|Jowst|Grab the Moment|10
-2017|Netherlands|OG3NE|Lights And Shadows|11
-2017|France|Alma|Requiem|12
-2017|Croatia|Jacques Houdek|My Friend|13
-2017|Azerbaijan|Dihaj|Skeletons|14
-2017|United Kingdom|Lucie Jones|Never Give Up on You|15
-2017|Austria|Nathan Trent|Running On Air|16
-2017|Belarus|Naviband|Historyja Majho Zyccia|17
-2017|Armenia|Artsvik|Fly With Me|18
-2017|Greece|Demy|This is Love|19
-2017|Denmark|Anja|Where I Am|20
-2017|Cyprus|Hovig|Gravity|21
-2017|Poland|Kasia Moś|Flashlight|22
-2017|Israel|Imri Ziv|I Feel Alive|23
-2017|Ukraine|O.Torvald|Time|24
-2017|Germany|Levina|Perfect Life|25
-2017|Spain|Manel Navarro|Do It for Your Lover|26
-2018|Israel|Netta Barzilai|Toy|1
-2018|Cyprus|Eleni Foureira|Fuego|2
-2018|Austria|Cesár Sampson|Nobody But You|3
-2018|Germany|Michael Schulte|You Let Me Walk Alone|4
-2018|Italy|Ermal Meta & Fabrizio Moro|Non Mi Avete Fatto Niente|5
-2018|Czechia|Mikolas Josef|Lie To Me|6
-2018|Sweden|Benjamin Ingrosso|Dance You Off|7
-2018|Estonia|Elina Nechayeva|La Forza|8
-2018|Denmark|Rasmussen|Higher Ground|9
-2018|Moldova|DoReDos|My Lucky Day|10
-2018|Albania|Eugent Bushpepa|Mall|11
-2018|Lithuania|Ieva Zasimauskaitė|When We're Old|12
-2018|France|Madame Monsieur|Mercy|13
-2018|Bulgaria|Equinox|Bones|14
-2018|Norway|Alexander Rybak|That's How You Write a Song|15
-2018|Ireland|Ryan O'Shaughnessy|Together|16
-2018|Ukraine|Mélovin|Under the Ladder|17
-2018|Netherlands|Waylon|Outlaw In 'Em|18
-2018|Serbia|Sanja Ilić & Balkanika|Nova Deca|19
-2018|Australia|Jessica Mauboy|We Got Love|20
-2018|Hungary|AWS|Viszlát Nyár|21
-2018|Slovenia|Lea Sirk|Hvala, ne!|22
-2018|Spain|Amaia & Alfred|Tu Canción|23
-2018|United Kingdom|SuRie|Storm|24
-2018|Finland|Saara Aalto|Monsters|25
-2018|Portugal|Cláudia Pascoal|O Jardim|26
-2019|Netherlands|Duncan Laurence|Arcade|1
-2019|Italy|Mahmood|Soldi|2
-2019|Russia|Sergey Lazarev|Scream|3
-2019|Switzerland|Luca Hänni|She Got Me|4
-2019|Sweden|John Lundvik|Too Late for Love|5
-2019|Norway|KEiiNO|Spirit in the Sky|6
-2019|North Macedonia|Tamara Todevska|Proud|7
-2019|Azerbaijan|Chingiz|Truth|8
-2019|Australia|Kate Miller-Heidke|Zero Gravity|9
-2019|Iceland|Hatari|Hatrið mun sigra|10
-2019|Czechia|Lake Malawi|Friend of a Friend|11
-2019|Denmark|Leonora|Love Is Forever|12
-2019|Cyprus|Tamta|Replay|13
-2019|Malta|Michela Pace|Chameleon|14
-2019|Slovenia|Zala Kralj & Gašper Šantl|Sebi|15
-2019|France|Bilal Hassani|Roi|16
-2019|Albania|Jonida Maliqi|Ktheju Tokës|17
-2019|Serbia|Nevena Božović|Kruna|18
-2019|San Marino|Serhat|Say Na Na Na|19
-2019|Estonia|Victor Crone|Storm|20
-2019|Greece|Katerine Duska|Better Love|21
-2019|Spain|Miki|La Venda|22
-2019|Israel|Kobi Marimi|Home|23
-2019|Belarus|Zena|Like It|24
-2019|Germany|S!sters|Sister|25
-2019|United Kingdom|Michael Rice|Bigger Than Us|26
-2021|Italy|Måneskin|Zitti e buoni|1
-2021|France|Barbara Pravi|Voilà|2
-2021|Switzerland|Gjon's Tears|Tout l'univers|3
-2021|Iceland|Daði & Gagnamagnið|10 Years|4
-2021|Ukraine|Go_A|Shum|5
-2021|Finland|Blind Channel|Dark Side|6
-2021|Malta|Destiny|Je Me Casse|7
-2021|Lithuania|The Roop|Discoteque|8
-2021|Russia|Manizha|Russian Woman|9
-2021|Greece|Stefania|Last Dance|10
-2021|Bulgaria|Victoria|Growing Up Is Getting Old|11
-2021|Portugal|The Black Mamba|Love Is On My Side|12
-2021|Moldova|Natalia Gordienko|Sugar|13
-2021|Sweden|Tusse|Voices|14
-2021|Serbia|Hurricane|Loco Loco|15
-2021|Cyprus|Elena Tsagrinou|El Diablo|16
-2021|Israel|Eden Alene|Set Me Free|17
-2021|Norway|TIX|Fallen Angel|18
-2021|Belgium|Hooverphonic|The Wrong Place|19
-2021|Azerbaijan|Efendi|Mata Hari|20
-2021|Albania|Anxhela Peristeri|Karma|21
-2021|San Marino|Senhit feat. Flo Rida|Adrenalina|22
-2021|Netherlands|Jeangu Macrooy|Birth Of A New Age|23
-2021|Spain|Blas Cantó|Voy A Quedarme|24
-2021|Germany|Jendrik|I Don't Feel Hate|25
-2021|United Kingdom|James Newman|Embers|26
-2022|Ukraine|Kalush Orchestra|Stefania|1
-2022|United Kingdom|Sam Ryder|Space Man|2
-2022|Spain|Chanel|SloMo|3
-2022|Sweden|Cornelia Jakobs|Hold Me Closer|4
-2022|Serbia|Konstrakta|In Corpore Sano|5
-2022|Italy|Mahmood & Blanco|Brividi|6
-2022|Moldova|Zdob și Zdub & Advahov Brothers|Trenulețul|7
-2022|Greece|Amanda Georgiadi Tenfjord|Die Together|8
-2022|Portugal|Maro|Saudade, saudade|9
-2022|Norway|Subwoolfer|Give That Wolf a Banana|10
-2022|Netherlands|S10|De Diepte|11
-2022|Poland|Ochman|River|12
-2022|Estonia|Stefan|Hope|13
-2022|Lithuania|Monika Liu|Sentimentai|14
-2022|Australia|Sheldon Riley|Not The Same|15
-2022|Azerbaijan|Nadir Rustamli|Fade To Black|16
-2022|Switzerland|Marius Bear|Boys Do Cry|17
-2022|Romania|WRS|Llámame|18
-2022|Belgium|Jérémie Makiese|Miss You|19
-2022|Armenia|Rosa Linn|Snap|20
-2022|Finland|The Rasmus|Jezebel|21
-2022|Czechia|We Are Domi|Lights Off|22
-2022|Iceland|Systur|Með hækkandi sól|23
-2022|France|Alvan & Ahez|Fulenn|24
-2022|Germany|Malik Harris|Rockstars|25
-2023|Sweden|Loreen|Tattoo|1
-2023|Finland|Käärijä|Cha Cha Cha|2
-2023|Israel|Noa Kirel|Unicorn|3
-2023|Italy|Marco Mengoni|Due vite|4
-2023|Norway|Alessandra|Queen of Kings|5
-2023|Ukraine|Tvorchi|Heart of Steel|6
-2023|Belgium|Gustaph|Because of You|7
-2023|Estonia|Alika|Bridges|8
-2023|Australia|Voyager|Promise|9
-2023|Czechia|Vesna|My Sister's Crown|10
-2023|Lithuania|Monika Linkytė|Stay|11
-2023|Cyprus|Andrew Lambrou|Break a Broken Heart|12
-2023|Croatia|Let 3|Mama ŠČ!|13
-2023|Armenia|Brunette|Future Lover|14
-2023|Austria|Teya & Salena|Who the Hell Is Edgar?|15
-2023|France|La Zarra|Évidemment|16
-2023|Spain|Blanca Paloma|Eaea|17
-2023|Moldova|Pasha Parfeni|Soarele și luna|18
-2023|Poland|Blanka|Solo|19
-2023|Switzerland|Remo Forrer|Watergun|20
-2023|Slovenia|Joker Out|Carpe Diem|21
-2023|Albania|Albina & Familja Kelmendi|Duje|22
-2023|Portugal|Mimicat|Ai coração|23
-2023|Serbia|Luke Black|Samo mi se spava|24
-2023|United Kingdom|Mae Muller|I Wrote a Song|25
-2023|Germany|Lord of the Lost|Blood & Glitter|26
-2024|Switzerland|Nemo|The Code|1
-2024|Croatia|Baby Lasagna|Rim Tim Tagi Dim|2
-2024|Ukraine|alyona alyona & Jerry Heil|Teresa & Maria|3
-2024|France|Slimane|Mon amour|4
-2024|Israel|Eden Golan|Hurricane|5
-2024|Ireland|Bambie Thug|Doomsday Blue|6
-2024|Italy|Angelina Mango|La noia|7
-2024|Armenia|Ladaniva|Jako|8
-2024|Sweden|Marcus & Martinus|Unforgettable|9
-2024|Portugal|Iolanda|Grito|10
-2024|Greece|Marina Satti|Zari|11
-2024|Germany|Isaak|Always on the Run|12
-2024|Luxembourg|Tali|Fighter|13
-2024|Lithuania|Silvester Belt|Luktelk|14
-2024|Cyprus|Silia Kapsis|Liar|15
-2024|Latvia|Dons|Hollow|16
-2024|Serbia|Teya Dora|Ramonda|17
-2024|United Kingdom|Olly Alexander|Dizzy|18
-2024|Finland|Windows95man|No Rules!|19
-2024|Estonia|5miinust & Puuluup|(nendest) narkootikumidest ei tea me (küll) midagi|20
-2024|Georgia|Nutsa Buzaladze|Firefighter|21
-2024|Spain|Nebulossa|Zorra|22
-2024|Slovenia|Raiven|Veronika|23
-2024|Austria|Kaleen|We Will Rave|24
-2024|Norway|Gåte|Ulveham|25
-2025|Austria|JJ|Wasted Love|1
-2025|Israel|Yuval Raphael|New Day Will Rise|2
-2025|Estonia|Tommy Cash|Espresso Macchiato|3
-2025|Sweden|KAJ|Bara bada bastu|4
-2025|Italy|Lucio Corsi|Volevo essere un duro|5
-2025|Greece|Klavdia|Asteromáta|6
-2025|France|Louane|Maman|7
-2025|Albania|Shkodra Elektronike|Zjerm|8
-2025|Ukraine|Ziferblat|Bird of Pray|9
-2025|Switzerland|Zoë Më|Voyage|10
-2025|Finland|Erika Vikman|Ich komme|11
-2025|Netherlands|Claude|C'est la vie|12
-2025|Latvia|Tautumeitas|Bur man laimi|13
-2025|Poland|Justyna Steczkowska|Gaja|14
-2025|Germany|Abor & Tynna|Baller|15
-2025|Lithuania|Katarsis|Tavo akys|16
-2025|Malta|Miriana Conte|Serving|17
-2025|Norway|Kyle Alessandro|Lighter|18
-2025|United Kingdom|Remember Monday|What the Hell Just Happened?|19
-2025|Armenia|Parg|Survivor|20
-2025|Portugal|Napa|Deslocado|21
-2025|Luxembourg|Laura Thorn|La poupée monte le son|22
-2025|Denmark|Sissal|Hallucination|23
-2025|Spain|Melody|Esa diva|24
-2025|Iceland|Væb|Róa|25
-2025|San Marino|Gabry Ponte|Tutta l'Italia|26
-2026|Bulgaria|Dara|Bangaranga|1
-2026|Israel|Noam Bettan|Michelle|2
-2026|Romania|Alexandra Căpitănescu|Choke Me|3
-2026|Australia|Delta Goodrem|Eclipse|4
-2026|Italy|Sal Da Vinci|Per sempre sì|5
-2026|Finland|Linda Lampenius & Pete Parkkonen|Liekinheitin|6
-2026|Denmark|Søren Torpegaard Lund|Før vi går hjem|7
-2026|Moldova|Satoshi|Viva, Moldova!|8
-2026|Ukraine|Leléka|Ridnym|9
-2026|Greece|Akylas|Ferto|10
-2026|France|Monroe|Regarde!|11
-2026|Poland|Alicja|Pray|12
-2026|Albania|Alis|Nân|13
-2026|Norway|Jonas Lovv|Ya Ya Ya|14
-2026|Croatia|Lelek|Andromeda|15
-2026|Czechia|Daniel Zizka|Crossroads|16
-2026|Serbia|Lavina|Kraj mene|17
-2026|Malta|Aidan|Bella|18
-2026|Cyprus|Antigoni|Jalla|19
-2026|Sweden|Felicia|My System|20
-2026|Belgium|Essyla|Dancing on the Ice|21
-2026|Lithuania|Lion Ceccah|Sólo quiero más|22
-2026|Germany|Sarah Engels|Fire|23
-2026|Austria|Cosmó|Tanzschein|24
-2026|United Kingdom|Look Mum No Computer|Eins, Zwei, Drei|25
+0001|1956|Switzerland|Lys Assia|Refrain|1
+0002|1957|Netherlands|Corry Brokken|Net Als Toen|1
+0003|1957|France|Paule Desjardins|La Belle Amour|2
+0004|1957|Denmark|Birthe Wilke & Gustav Winckler|Skibet Skal Sejle I Nat|3
+0005|1957|Germany|Margot Hielscher|Telefon, Telefon|4=
+0006|1957|Luxembourg|Danièle Dupré|Amours Mortes (Tant De Peine)|4=
+0007|1958|France|André Claveau|Dors Mon Amour|1
+0008|1958|Switzerland|Lys Assia|Giorgio|2
+0009|1958|Italy|Domenico Modugno|Nel Blu Dipinto Di Blu|3
+0010|1958|Sweden|Alice Babs|Lilla Stjärna|4
+0011|1958|Austria|Liane Augustin|Die Ganze Welt Braucht Liebe|5=
+0012|1958|Belgium|Fud Leclerc|Ma Petite Chatte|5=
+0013|1959|Netherlands|Teddy Scholten|Een Beetje|1
+0014|1959|United Kingdom|Pearl Carr & Teddy Johnson|Sing Little Birdie|2
+0015|1959|France|Jean Philippe|Oui, Oui, Oui, Oui|3
+0016|1959|Switzerland|Christa Williams|Irgendwoher|4
+0017|1959|Denmark|Birthe Wilke|Uh, Jeg Ville Ønske Jeg Var Dig|5
+0018|1960|France|Jacqueline Boyer|Tom Pillibi|1
+0019|1960|United Kingdom|Bryan Johnson|Looking High, High, High|2
+0020|1960|Monaco|François Deguelt|Ce Soir-là|3
+0021|1960|Germany|Wyn Hoop|Bonne Nuit, Ma Chérie!|4=
+0022|1960|Norway|Nora Brockstedt|Voi-voi|4=
+0023|1961|Luxembourg|Jean-Claude Pascal|Nous Les Amoureux|1
+0024|1961|United Kingdom|The Allisons|Are You Sure?|2
+0025|1961|Switzerland|Franca di Rienzo|Nous Aurons Demain|3
+0026|1961|France|Jean-Paul Mauric|Printemps (avril Carillonne)|4
+0027|1961|Denmark|Dario Campeotto|Angelique|5=
+0028|1961|Italy|Betty Curtis|Al Di Là|5=
+0029|1962|France|Isabelle Aubret|Un Premier Amour|1
+0030|1962|Monaco|François Deguelt|Dis Rien|2
+0031|1962|Luxembourg|Camillo Felgen|Petit Bonhomme|3
+0032|1962|United Kingdom|Ronnie Carroll|Ring-a-ding Girl|4=
+0033|1962|Yugoslavia|Lola Novaković|Ne Pali Svetlo U Sumrak|4=
+0034|1963|Denmark|Grethe & Jørgen Ingmann|Dansevise|1
+0035|1963|Switzerland|Esther Ofarim|T'en Va Pas|2
+0036|1963|Italy|Emilio Pericoli|Uno Per Tutte|3
+0037|1963|United Kingdom|Ronnie Carroll|Say Wonderful Things|4
+0038|1963|France|Alain Barrière|Elle était Si Jolie|5=
+0039|1963|Monaco|Françoise Hardy|L'amour S'en Va|5=
+0040|1964|Italy|Gigliola Cinquetti|Non Ho L'étà|1
+0041|1964|United Kingdom|Matt Monro|I Love The Little Things|2
+0042|1964|Monaco|Romuald|Où Sont-elles Passées?|3
+0043|1964|France|Rachel|Le Chant De Mallory|4=
+0044|1964|Luxembourg|Hugues Aufray|Dès Que Le Printemps Revient|4=
+0045|1965|Luxembourg|France Gall|Poupée De Cire, Poupée De Son|1
+0046|1965|United Kingdom|Kathy Kirby|I Belong|2
+0047|1965|France|Guy Mardel|N'avoue Jamais|3
+0048|1965|Austria|Udo Jürgens|Sag Ihr, Ich Lass' Sie Grüßen|4
+0049|1965|Italy|Bobby Solo|Se Piangi, Se Ridi|5
+0050|1966|Austria|Udo Jürgens|Merci Chérie|1
+0051|1966|Sweden|Lill Lindfors & Svante Thuresson|Nygammal Vals|2
+0052|1966|Norway|Åse Kleveland|Intet Er Nytt Under Solen|3
+0053|1966|Belgium|Tonia|Un Peu De Poivre, Un Peu De Sel|4=
+0054|1966|Ireland|Dickie Rock|Come Back To Stay|4=
+0055|1967|United Kingdom|Sandie Shaw|Puppet On A String|1
+0056|1967|Ireland|Sean Dunphy|If I Could Choose|2
+0057|1967|France|Noëlle Cordier|Il Doit Faire Beau Là-bas|3
+0058|1967|Luxembourg|Vicky|L'amour Est Bleu|4
+0059|1967|Monaco|Minouche Barelli|Boum-badaboum|5
+0060|1968|Spain|Massiel|La, La, La...|1
+0061|1968|United Kingdom|Cliff Richard|Congratulations|2
+0062|1968|France|Isabelle Aubret|La Source|3
+0063|1968|Ireland|Pat McGeegan|Chance Of A Lifetime|4
+0064|1968|Sweden|Claes-Göran Hederström|Det Börjar Verka Kärlek, Banne Mej|5
+0065|1969|France|Frida Boccara|Un Jour, Un Enfant|1=
+0066|1969|Netherlands|Lenny Kuhr|De Troubadour|1=
+0067|1969|Spain|Salomé|Vivo Cantando|1=
+0068|1969|United Kingdom|Lulu|Boom Bang-a-bang|1=
+0069|1969|Switzerland|Paola del Medico|Bonjour, Bonjour|5
+0070|1970|Ireland|Dana|All Kinds Of Everything|1
+0071|1970|United Kingdom|Mary Hopkin|Knock, Knock (who's there?)|2
+0072|1970|Germany|Katja Ebstein|Wunder Gibt Es Immer Wieder|3
+0073|1970|France|Guy Bonnet|Marie Blanche|4=
+0074|1970|Spain|Julio Iglesias|Gwendolyne|4=
+0075|1970|Switzerland|Henri Dès|Retour|4=
+0076|1971|Monaco|Séverine|Un Banc, Un Arbre, Une Rue|1
+0077|1971|Spain|Karina|En Un Mundo Nuevo|2
+0078|1971|Germany|Katja Ebstein|Diese Welt|3
+0079|1971|United Kingdom|Clodagh Rodgers|Jack In The Box|4
+0080|1971|Italy|Massimo Ranieri|L'amore è Un Attimo|5
+0081|1972|Luxembourg|Vicky Leandros|Après Toi|1
+0082|1972|United Kingdom|The New Seekers|Beg, Steal Or Borrow|2
+0083|1972|Germany|Mary Roos|Nur Die Liebe Läßt Uns Leben|3
+0084|1972|Netherlands|Sandra and Andres|Als Het Om De Liefde Gaat|4
+0085|1972|Austria|The Milestones|Falter Im Wind|5
+0086|1973|Luxembourg|Anne-Marie David|Tu Te Reconnaîtras|1
+0087|1973|Spain|Mocedades|Eres Tú|2
+0088|1973|United Kingdom|Cliff Richard|Power To All Our Friends|3
+0089|1973|Israel|Ilanit|Ey-sham|4
+0090|1973|Sweden|The Nova and The Dolls|You're Summer|5
+0091|1974|Sweden|ABBA|Waterloo|1
+0092|1974|Italy|Gigliola Cinquetti|Si|2
+0093|1974|Netherlands|Mouth and MacNeal|I See A Star|3
+0094|1974|Luxembourg|Ireen Sheer|Bye, Bye, I Love You|4=
+0095|1974|Monaco|Romuald|Celui Qui Reste Et Celui Qui S'en Va|4=
+0096|1974|United Kingdom|Olivia Newton-John|Long Live Love|4=
+0097|1975|Netherlands|Teach-In|Ding-A-Dong|1
+0098|1975|United Kingdom|The Shadows|Let Me Be The One|2
+0099|1975|Italy|Wess & Dori Ghezzi|Era|3
+0100|1975|France|Nicole Rieu|Et Bonjour à Toi L'artiste|4
+0101|1975|Luxembourg|Géraldine|Toi|5
+0102|1976|United Kingdom|Brotherhood of Man|Save Your Kisses For Me|1
+0103|1976|France|Catherine Ferry|Un, Deux, Trois|2
+0104|1976|Monaco|Mary Christy|Toi, La Musique Et Moi|3
+0105|1976|Switzerland|Peter, Sue and Marc|Djambo, Djambo|4
+0106|1976|Austria|Waterloo and Robinson|My Little World|5
+0107|1977|France|Marie Myriam|L'oiseau Et L'enfant|1
+0108|1977|United Kingdom|Lynsey de Paul and Mike Moran|Rock Bottom|2
+0109|1977|Ireland|The Swarbriggs Plus Two|It's Nice To Be In Love Again|3
+0110|1977|Monaco|Michèle Torr|Une Petite Française|4
+0111|1977|Greece|Pascalis, Marianna, Robert and Bessy|Mathima Solfez|5
+0112|1978|Israel|Izhar Cohen and the Alphabeta|A-Ba-Ni-Bi|1
+0113|1978|Belgium|Jean Vallée|L'amour ça Fait Chanter La Vie|2
+0114|1978|France|Joël Prévost|Il Y Aura Toujours Des Violons|3
+0115|1978|Monaco|Caline and Olivier Toussaint|Les Jardins De Monaco|4
+0116|1978|Ireland|Colm T. Wilkinson|Born To Sing|5
+0117|1979|Israel|Milk and Honey|Hallelujah|1
+0118|1979|Spain|Betty Missiego|Su Canción|2
+0119|1979|France|Anne-Marie David|Je Suis L'enfant-soleil|3
+0120|1979|Germany|Dschinghis Khan|NA|4
+0121|1979|Ireland|Cathal Dunne|Happy Man|5
+0122|1980|Ireland|Johnny Logan|What's Another Year|1
+0123|1980|Germany|Katja Ebstein|Theater|2
+0124|1980|United Kingdom|Prima Donna|Love Enough For Two|3
+0125|1980|Switzerland|Paola|Cinéma|4
+0126|1980|Netherlands|Maggie MacNeal|Amsterdam|5
+0127|1981|United Kingdom|Bucks Fizz|Making Your Mind Up|1
+0128|1981|Germany|Lena Valaitis|Johnny Blue|2
+0129|1981|France|Jean Gabilou|Humanahum|3
+0130|1981|Switzerland|Peter, Sue and Marc|Io Senza Tei|4
+0131|1981|Ireland|Sheeba|Horoscopes|5
+0132|1982|Germany|Nicole|Ein Bißchen Frieden|1
+0133|1982|Israel|Avi Toledano|Hora|2
+0134|1982|Switzerland|Arlette Zola|Amour On T'aime|3
+0135|1982|Belgium|Stella|Si Tu Aimes Ma Musique|4
+0136|1982|Cyprus|Anna Vissi|Mono I Agapi|5
+0137|1983|Luxembourg|Corinne Hermès|Si La Vie Est Cadeau|1
+0138|1983|Israel|Ofra Haza|Hi|2
+0139|1983|Sweden|Carola Häggkvist|Främling|3
+0140|1983|Yugoslavia|Danijel|Dzuli|4
+0141|1983|Germany|Hoffmann und Hoffmann|Rücksicht|5
+0142|1984|Sweden|Herrey's|Diggi-loo Diggy-ley|1
+0143|1984|Ireland|Linda Martin|Terminal '3'|2
+0144|1984|Spain|Bravo|Lady, Lady|3
+0145|1984|Denmark|Hot Eyes|Det' Lige Det|4
+0146|1984|Belgium|Jacques Zegers|Avanti La Vie|5=
+0147|1984|Italy|Alice and Battiato|I Treni Di Tozeur|5=
+0148|1985|Norway|Bobbysocks|La Det Swinge|1
+0149|1985|Germany|Wind|Für Alle|2
+0150|1985|Sweden|Kikki Danielsson|Bra Vibrationer|3
+0151|1985|United Kingdom|Vikki|Love Is...|4
+0152|1985|Israel|Izhar Cohen|Olé Olé|5
+0153|1986|Belgium|Sandra Kim|J'aime La Vie|1
+0154|1986|Switzerland|Daniela Simons|Pas Pour Moi|2
+0155|1986|Luxembourg|Sherisse Laurence|L'amour De Ma Vie|3
+0156|1986|Ireland|Luv Bug|You Can Count On Me|4
+0157|1986|Sweden|Lasse Holm & Monica Törnell|E' De' Det Här Du Kallar Kärlek|5
+0158|1987|Ireland|Johnny Logan|Hold Me Now|1
+0159|1987|Germany|Wind|Laß Die Sonne In Dein Herz|2
+0160|1987|Italy|Umberto Tozzi and Raf|Gente Di Mare|3
+0161|1987|Yugoslavia|Novi Fosili|Ja Sam Za Ples|4
+0162|1987|Denmark|Anne-Cathrine Herdorf|En Lille Melodi|5=
+0163|1987|Netherlands|Marcha|Rechtop In De Wind|5=
+0164|1988|Switzerland|Céline Dion|Ne Partez Pas Sans Moi|1
+0165|1988|United Kingdom|Scott Fitzgerald|Go|2
+0166|1988|Denmark|Kirsten & Søren|Ka' Du Se Hva' Jeg Sa'|3
+0167|1988|Luxembourg|Lara Fabian|Croire|4
+0168|1988|Norway|Karoline Krüger|For Vår Jord|5
+0169|1989|Yugoslavia|Riva|Rock Me|1
+0170|1989|United Kingdom|Live Report|Why Do I Always Get It Wrong|2
+0171|1989|Denmark|Birthe Kjær|Vi Maler Byen Rød|3
+0172|1989|Sweden|Tommy Nilsson|En Dag|4
+0173|1989|Austria|Thomas Forstner|Nur Ein Lied|5
+0174|1990|Italy|Toto Cutugno|Insieme: 1992|1
+0175|1990|France|Joelle Ursull|White And Black Blues|2=
+0176|1990|Ireland|Liam Reilly|Somewhere In Europe|2=
+0177|1990|Iceland|Stjórnin|Eitt Lag Enn|4
+0178|1990|Spain|Azúcar Moreno|Bandido|5
+0179|1991|Sweden|Carola|Fångad Av En Stormvind|1
+0180|1991|France|Amina|C'est Le Dernier Qui A Parlé Qui A Raison|2
+0181|1991|Israel|Duo Datz|Kan|3
+0182|1991|Spain|Sergio Dalma|Bailar Pegados|4
+0183|1991|Switzerland|Sandra Simò|Canzone Per Te|5
+0184|1992|Ireland|Linda Martin|Why Me|1
+0185|1992|United Kingdom|Michael Ball|One Step Out Of Time|2
+0186|1992|Malta|Mary Spiteri|Little Child|3
+0187|1992|Italy|Mia Martini|Rapsodia|4
+0188|1992|Greece|Cleopatra|Olou Tou Kosmou tin Elpida|5
+0189|1993|Ireland|Niamh Kavanagh|In Your Eyes|1
+0190|1993|United Kingdom|Sonia|Better The Devil You Know|2
+0191|1993|Switzerland|Annie Cotton|Moi, Tout Simplement|3
+0192|1993|France|Patrick Fiori|Mama Corsica|4
+0193|1993|Norway|Silje Vige|Alle Mine Tankar|5
+0194|1994|Ireland|Paul Harrington & Charlie McGettigan|Rock 'n' Roll Kids|1
+0195|1994|Poland|Edyta Górniak|To Nie Ja!|2
+0196|1994|Germany|MeKaDo|Wir Geben 'ne Party|3
+0197|1994|Hungary|Friderika Bayer|Kinek Mondjam El Vétkeimet|4
+0198|1994|Malta|Moira Stafrace and Christopher Scicluna|More Than Love|5
+0199|1995|Norway|Secret Garden|Nocturne|1
+0200|1995|Spain|Anabel Conde|Vuelve Conmigo|2
+0201|1995|Sweden|Jan Johansen|Se På Mej|3
+0202|1995|France|Nathalie Santamaria|Il Me Donne Rendez-vous|4
+0203|1995|Denmark|Aud Wilken|Fra Mols Til Skagen|5
+0204|1996|Ireland|Eimear Quinn|The Voice|1
+0205|1996|Norway|Elisabeth Andreasson|I Evighet|2
+0206|1996|Sweden|One More Time|Den Vilda|3
+0207|1996|Croatia|Maja Blagdan|Sveta Ljubav|4
+0208|1996|Estonia|Ivo Linna and Maarja-Liis Ilus|Kaelakee Hääl|5
+0209|1997|United Kingdom|Katrina and The Waves|Love Shine A Light|1
+0210|1997|Ireland|Marc Roberts|Mysterious Woman|2
+0211|1997|Turkey|Sebnem Paker and Group Etnic|Dinle|3
+0212|1997|Italy|Jalisse|Fiumi Di Parole|4
+0213|1997|Cyprus|Chara and Andreas Konstantinou|Mana Mou|5
+0214|1998|Israel|Dana International|Diva|1
+0215|1998|United Kingdom|Imaani|Where Are You?|2
+0216|1998|Malta|Chiara|The One That I Love|3
+0217|1998|Netherlands|Edsilia Rombley|Hemel En Aarde|4
+0218|1998|Croatia|Danijela|Neka Mi Ne Svane|5
+0219|1999|Sweden|Charlotte Nilsson|Take Me To Your Heaven|1
+0220|1999|Iceland|Selma Björnsdóttir|All Out Of Luck|2
+0221|1999|Germany|Sürpriz|Reise Nach Jerusalem - Kudüs'e Seyahat|3
+0222|1999|Croatia|Doris Dragović|Marija Magdalena|4
+0223|1999|Israel|Eden|Yom Huledeth|5
+0224|2000|Denmark|Olsen brothers|Fly On The Wings Of Love|1
+0225|2000|Russia|Alsou|Solo|2
+0226|2000|Latvia|BrainStorm|My Star|3
+0227|2000|Estonia|Ines|Once In A Lifetime|4
+0228|2000|Germany|Stefan Raab|Wadde Hadde Dudde Da|5
+0229|2000|Ireland|Eamonn Toal|Millennium Of Love|6
+0230|2000|Sweden|Roger Pontare|When Spirits Are Calling My Name|7
+0231|2000|Malta|Claudette Pace|Desire|8
+0232|2000|Croatia|Goran Karan|Kada Zaspu Andeli|9
+0233|2000|Turkey|Pinar Ayhan & S.O.S. band|Yorgunum Anla|10
+0234|2000|Norway|Charmed|My Heart Goes Boom|11
+0235|2000|Iceland|August & Telma|Tell Me!|12
+0236|2000|Netherlands|Linda Wagenmakers|No Goodbyes|13
+0237|2000|Austria|The rounder girls|All To You|14
+0238|2000|North Macedonia|XXL|100% Te Ljubam|15
+0239|2000|United Kingdom|Nicki French|Don't Play That Song Again|16
+0240|2000|Romania|Taxi|The Moon|17
+0241|2000|Finland|Nina Åström|A Little Bit|18=
+0242|2000|Spain|Serafín Zubiri|Colgado De Un Sueño|18=
+0243|2000|Switzerland|Jane Bogaert|La Vita Cos'è?|20
+0244|2000|Cyprus|Voice|Nomiza|21
+0245|2000|Israel|Ping Pong|Sa'me'akh|22
+0246|2000|France|Sofia Mestari|On Aura Le Ciel|23
+0247|2000|Belgium|Nathalie Sorce|Envie De Vivre|24
+0248|2001|Estonia|Tanel Padar, Dave Benton & 2XL|Everybody|1
+0249|2001|Denmark|Rollo & King|Never Ever Let You Go|2
+0250|2001|Greece|Antique|Die For You|3
+0251|2001|France|Natasha Saint-Pier|Je N'ai Que Mon âme|4
+0252|2001|Sweden|Friends|Listen To Your Heartbeat|5
+0253|2001|Spain|David Civera|Dile Que La Quiero|6
+0254|2001|Slovenia|Nuša Derenda|Energy|7
+0255|2001|Germany|Michelle|Wer Liebe Lebt|8
+0256|2001|Malta|Fabrizio Faniello|Another Summer Night|9
+0257|2001|Croatia|Vanna|Strings Of My Heart|10
+0258|2001|Turkey|Sedat Yüce|Sevgiliye Son|11
+0259|2001|Russia|Mumiy troll|Lady Alpine Blue|12
+0260|2001|Lithuania|Skamp|You Got Style|13
+0261|2001|Bosnia & Herzegovina|Nino|Hano|14
+0262|2001|United Kingdom|Lindsay D.|No Dream Impossible|15
+0263|2001|Israel|Tal Sondak|Ein Davar|16
+0264|2001|Portugal|MTM|Só Sei Ser Feliz Assim|17
+0265|2001|Latvia|Arnis Mednis|Too Much|18=
+0266|2001|Netherlands|Michelle|Out On My Own|18=
+0267|2001|Poland|Piasek|2 Long|20
+0268|2001|Ireland|Gary O'Shaughnessy|Without Your Love|21
+0269|2001|Iceland|TwoTricky|Angel|22=
+0270|2001|Norway|Haldor Lægreid|On My Own|22=
+0271|2002|Latvia|Marie N|I Wanna|1
+0272|2002|Malta|Ira Losco|7th Wonder|2
+0273|2002|Estonia|Sahléne|Runaway|3=
+0274|2002|United Kingdom|Jessica Garlick|Come Back|3=
+0275|2002|France|Sandrine François|Il Faut Du Temps|5
+0276|2002|Cyprus|One|Gimme|6
+0277|2002|Spain|Rosa|Europe's Living A Celebration|7
+0278|2002|Sweden|Afro-dite|Never Let It Go|8
+0279|2002|Romania|Monica Anghel & Marcel Pavel|Tell Me Why|9
+0280|2002|Russia|Prime minister|Northern Girl|10
+0281|2002|Croatia|Vesna Pisarovic|Everything I Want|11
+0282|2002|Israel|Sarit Hadad|Light A Candle|12
+0283|2002|Belgium|Sergio & the Ladies|Sister|13=
+0284|2002|Bosnia & Herzegovina|Maja|Na Jastuku Za Dvoje|13=
+0285|2002|Slovenia|Sestre|Samo Ljubezen|13=
+0286|2002|Turkey|Buket Bengisu & Saphire|Leylaklar Soldu Kalbinde|16
+0287|2002|Greece|Michalis Rakintzis|S.A.G.A.P.O.|17
+0288|2002|Austria|Manuel Ortega|Say A Word|18
+0289|2002|North Macedonia|Karolina|Od Nas Zavisi|19
+0290|2002|Finland|Laura|Addicted To You|20
+0291|2002|Germany|Corinna May|I Can't Live Without Music|21
+0292|2002|Switzerland|Francine Jordi|Dans Le Jardin De Mon Âme|22
+0293|2002|Lithuania|Aivaras|Happy You|23
+0294|2002|Denmark|Malene|Tell Me Who You Are|24
+0295|2003|Turkey|Sertab Erener|Everyway That I Can|1
+0296|2003|Belgium|Urban Trad|Sanomi|2
+0297|2003|Russia|t.A.T.u.|Ne Ver’, Ne Boisia|3
+0298|2003|Norway|Jostein Hasselgård|I'm Not Afraid To Move On|4
+0299|2003|Sweden|Fame|Give Me Your Love|5
+0300|2003|Austria|Alf Poier|Weil Der Mensch Zählt|6
+0301|2003|Poland|Ich Troje|Keine Grenzen - Zadnych Granic|7
+0302|2003|Iceland|Birgitta|Open Your Heart|8
+0303|2003|Spain|Beth|Dime|9
+0304|2003|Romania|Nicola|Don’t Break My Heart|10
+0305|2003|Germany|Lou|Let’s Get Happy|11
+0306|2003|Ireland|Mickey Harte|We’'ve Got The World|12
+0307|2003|Netherlands|Esther Hart|One More Night|13
+0308|2003|Ukraine|Olexandr|Hasta La Vista|14
+0309|2003|Croatia|Claudia Beni|Više Nisam Tvoja|15
+0310|2003|Bosnia & Herzegovina|Mija Martina|Ne Brini|16
+0311|2003|Greece|Mando|Never Let You Go|17
+0312|2003|France|Louisa Baileche|Monts Et Merveilles|18
+0313|2003|Israel|Lior Narkis|Words For Love|19
+0314|2003|Cyprus|Stelios Constantas|Feeling Alive|20
+0315|2003|Estonia|Ruffus|Eighties Coming Back|21
+0316|2003|Portugal|Rita Guerra|Deixa-me Sonhar|22
+0317|2003|Slovenia|Karmen|Nanana|23
+0318|2003|Latvia|F.L.Y.|Hello From Mars|24
+0319|2003|Malta|Lynn Chirchop|To Dream Again|25
+0320|2003|United Kingdom|Jemini|Cry Baby|26
+0321|2004|Ukraine|Ruslana|Wild Dances|1
+0322|2004|Serbia and Montenegro|Željko Joksimović|Lane Moje|2
+0323|2004|Greece|Sakis Rouvas|Shake It|3
+0324|2004|Turkey|Athena|For Real|4
+0325|2004|Cyprus|Lisa Andreas|Stronger Every Minute|5
+0326|2004|Sweden|Lena Philipsson|It Hurts|6
+0327|2004|Albania|Anjeza Shahini|The Image Of You|7
+0328|2004|Germany|Max|Can't Wait Until Tonight|8
+0329|2004|Bosnia & Herzegovina|Deen|In The Disco|9
+0330|2004|Spain|Ramón|Para Llenarme De Ti|10
+0331|2004|Russia|Julia Savicheva|Believe Me|11
+0332|2004|Malta|Julie & Ludwig|On Again... Off Again|12
+0333|2004|Croatia|Ivan Mikulic|You Are The Only One|13
+0334|2004|North Macedonia|Tose Proeski|Life|14
+0335|2004|France|Jonatan Cerrada|A Chaque Pas|15
+0336|2004|United Kingdom|James Fox|Hold On To Our Love|16
+0337|2004|Poland|Blue Cafe|Love Song|17
+0338|2004|Romania|Sanda Ladosi|I Admit|18
+0339|2004|Iceland|Jónsi|Heaven|19
+0340|2004|Netherlands|Re-union|Without You|20
+0341|2004|Austria|Tie Break|Du Bist|21
+0342|2004|Belgium|Xandee|1 Life|22
+0343|2004|Ireland|Chris Doran|If My World Stopped Turning|23
+0344|2004|Norway|Knut Anders Sørum|High|24
+0345|2005|Greece|Helena Paparizou|My Number One|1
+0346|2005|Malta|Chiara|Angel|2
+0347|2005|Romania|Luminita Anghel & Sistem|Let Me Try|3
+0348|2005|Israel|Shiri Maymon|Hasheket Shenish'ar|4
+0349|2005|Latvia|Walter & Kazha|The War Is Not Over|5
+0350|2005|Moldova|Zdob şi Zdub|Boonika Bate Doba|6
+0351|2005|Serbia and Montenegro|No Name|Zauvijek Moja|7
+0352|2005|Switzerland|Vanilla Ninja|Cool Vibes|8
+0353|2005|Norway|Wig Wam|In My Dreams|9
+0354|2005|Denmark|Jakob Sveistrup|Talking To You|10
+0355|2005|Croatia|Boris Novkovic feat. Lado members|Vukovi Umiru Sami|11
+0356|2005|Hungary|NOX|Forogj Világ|12
+0357|2005|Turkey|Gülseren|Rimi Rimi Ley|13
+0358|2005|Bosnia & Herzegovina|Feminnem|Call Me|14
+0359|2005|Russia|Natalia Podolskaya|Nobody Hurt No One|15
+0360|2005|Albania|Ledina Celo|Tomorrow I Go|16
+0361|2005|North Macedonia|Martin Vucic|Make My Day|17
+0362|2005|Cyprus|Constantinos Christoforou|Ela Ela|18
+0363|2005|Sweden|Martin Stenmarck|Las Vegas|19
+0364|2005|Ukraine|Greenjolly|Razom Nas Bahato|20
+0365|2005|Spain|Son de sol|Brujería|21
+0366|2005|United Kingdom|Javine|Touch My Fire|22
+0367|2005|France|Ortal|Chacun Pense à Soi|23
+0368|2005|Germany|Gracia|Run & Hide|24
+0369|2006|Finland|Lordi|Hard Rock Hallelujah|1
+0370|2006|Russia|Dima Bilan|Never Let You Go|2
+0371|2006|Bosnia & Herzegovina|Hari Mata Hari|Lejla|3
+0372|2006|Romania|Mihai Traistariu|Tornero|4
+0373|2006|Sweden|Carola|Invincible|5
+0374|2006|Lithuania|LT United|We Are The Winners|6
+0375|2006|Ukraine|Tina Karol|Show Me Your Love|7
+0376|2006|Armenia|André|Without Your Love|8
+0377|2006|Greece|Anna Vissi|Everything|9
+0378|2006|Ireland|Brian Kennedy|Every Song Is A Cry For Love|10
+0379|2006|Turkey|Sibel Tüzün|Superstar|11
+0380|2006|North Macedonia|Elena Risteska|Ninanajna|12
+0381|2006|Croatia|Severina|Moja štikla|13
+0382|2006|Norway|Christine Guldbrandsen|Alvedansen|14
+0383|2006|Germany|Texas Lightning|No, No, Never|15
+0384|2006|Latvia|Cosmos|I Hear Your Heart|16
+0385|2006|Switzerland|Six4One|If We All Give A Little|17
+0386|2006|Denmark|Sidsel Ben Semmane|Twist Of Love|18
+0387|2006|United Kingdom|Daz Sampson|Teenage Life|19
+0388|2006|Moldova|Arsenium & Natalia Gordienko|Loca|20
+0389|2006|Spain|Las Ketchup|Bloody Mary|21
+0390|2006|France|Virginie Pouchin|Il était Temps|22
+0391|2006|Israel|Eddie Butler|Ze Hazman|23
+0392|2006|Malta|Fabrizio Faniello|I Do|24
+0393|2007|Serbia|Marija Šerifović|Molitva|1
+0394|2007|Ukraine|Verka Serduchka|Dancing Lasha Tumbai|2
+0395|2007|Russia|Serebro|Song # 1|3
+0396|2007|Turkey|Kenan Dogulu|Shake It Up Shekerim|4
+0397|2007|Bulgaria|Elitsa Todorova & Stoyan Yankulov|Water|5
+0398|2007|Belarus|Dmitry Koldun|Work Your Magic|6
+0399|2007|Greece|Sarbel|Yassou Maria|7
+0400|2007|Armenia|Hayko|Anytime You Need|8
+0401|2007|Hungary|Magdi Rúzsa|Unsubstantial Blues|9
+0402|2007|Moldova|Natalia Barbu|Fight|10
+0403|2007|Bosnia & Herzegovina|Marija Sestic|Rijeka Bez Imena|11
+0404|2007|Georgia|Sopho|Visionary Dream|12
+0405|2007|Romania|Todomondo|Liubi, Liubi, I Love You|13
+0406|2007|North Macedonia|Karolina|Mojot Svet|14
+0407|2007|Slovenia|Alenka Gotar|Cvet Z Juga|15
+0408|2007|Latvia|Bonaparti.lv|Questa Notte|16
+0409|2007|Finland|Hanna Pakarinen|Leave Me Alone|17
+0410|2007|Sweden|The Ark|The Worrying Kind|18
+0411|2007|Germany|Roger Cicero|Frauen Regieren Die Welt|19
+0412|2007|Spain|NASH|I Love You Mi Vida|20
+0413|2007|Lithuania|4Fun|Love Or Leave|21
+0414|2007|France|Les Fatals Picards|L'amour à La Française|22
+0415|2007|United Kingdom|Scooch|Flying The Flag (for You)|23
+0416|2007|Ireland|Dervish|They Can't Stop The Spring|24
+0417|2008|Russia|Dima Bilan|Believe|1
+0418|2008|Ukraine|Ani Lorak|Shady Lady|2
+0419|2008|Greece|Kalomira|Secret Combination|3
+0420|2008|Armenia|Sirusho|Qele, Qele|4
+0421|2008|Norway|Maria|Hold On Be Strong|5
+0422|2008|Serbia|Jelena Tomašević feat. Bora Dugic|Oro|6
+0423|2008|Turkey|Mor ve Ötesi|Deli|7
+0424|2008|Azerbaijan|Elnur & Samir|Day After Day|8
+0425|2008|Israel|Boaz|The Fire In Your Eyes|9
+0426|2008|Bosnia & Herzegovina|Laka|Pokušaj|10
+0427|2008|Georgia|Diana Gurtskaya|Peace Will Come|11
+0428|2008|Latvia|Pirates Of The Sea|Wolves Of The Sea|12
+0429|2008|Portugal|Vânia Fernandes|Senhora Do Mar (Negras Águas)|13
+0430|2008|Iceland|Euroband|This Is My Life|14
+0431|2008|Denmark|Simon Mathew|All Night Long|15
+0432|2008|Spain|Rodolfo Chikilicuatre|Baila El Chiki Chiki|16
+0433|2008|Albania|Olta Boka|Zemrën E Lamë Peng|17
+0434|2008|Sweden|Charlotte Perrelli|Hero|18
+0435|2008|France|Sébastien Tellier|Divine|19
+0436|2008|Romania|Nico & Vlad|Pe-o Margine De Lume|20
+0437|2008|Croatia|Kraljevi Ulice & 75 Cents|Romanca|21
+0438|2008|Finland|Teräsbetoni|Missä Miehet Ratsastaa|22
+0439|2008|Germany|No Angels|Disappear|23
+0440|2008|Poland|Isis Gee|For Life|24
+0441|2008|United Kingdom|Andy Abraham|Even If|25
+0442|2009|Norway|Alexander Rybak|Fairytale|1
+0443|2009|Iceland|Yohanna|Is It True?|2
+0444|2009|Azerbaijan|AySel & Arash|Always|3
+0445|2009|Turkey|Hadise|Düm Tek Tek|4
+0446|2009|United Kingdom|Jade Ewen|It's My Time|5
+0447|2009|Estonia|Urban Symphony|Rändajad|6
+0448|2009|Greece|Sakis Rouvas|This Is Our Night|7
+0449|2009|France|Patricia Kaas|Et S'il Fallait Le Faire|8
+0450|2009|Bosnia & Herzegovina|Regina|Bistra Voda|9
+0451|2009|Armenia|Inga & Anush|Jan Jan|10
+0452|2009|Russia|Anastasia Prikhodko|Mamo|11
+0453|2009|Ukraine|Svetlana Loboda|Be my Valentine! (Anti-crisis Girl)|12
+0454|2009|Denmark|Brinck|Believe Again|13
+0455|2009|Moldova|Nelly Ciobanu|Hora Din Moldova|14
+0456|2009|Portugal|Flor-de-lis|Todas As Ruas Do Amor|15
+0457|2009|Israel|Noa & Mira Awad|There Must Be Another Way|16
+0458|2009|Albania|Kejsi Tola|Carry Me In Your Dreams|17
+0459|2009|Croatia|Igor Cukrov feat. Andrea|Lijepa Tena|18
+0460|2009|Romania|Elena|The Balkan Girls|19
+0461|2009|Germany|Alex Swings Oscar Sings!|Miss Kiss Kiss Bang|20
+0462|2009|Sweden|Malena Ernman|La Voix|21
+0463|2009|Malta|Chiara|What If We|22
+0464|2009|Lithuania|Sasha Son|Love|23
+0465|2009|Spain|Soraya|La Noche Es Para Mí (The Night Is For Me)|24
+0466|2009|Finland|Waldo's People|Lose Control|25
+0467|2010|Germany|Lena|Satellite|1
+0468|2010|Turkey|maNga|We Could Be The Same|2
+0469|2010|Romania|Paula Seling & Ovi|Playing With Fire|3
+0470|2010|Denmark|Chanée & N'evergreen|In A Moment Like This|4
+0471|2010|Azerbaijan|Safura|Drip Drop|5
+0472|2010|Belgium|Tom Dice|Me And My Guitar|6
+0473|2010|Armenia|Eva Rivas|Apricot Stone|7
+0474|2010|Greece|Giorgos Alkaios & Friends|OPA|8
+0475|2010|Georgia|Sofia Nizharadze|Shine|9
+0476|2010|Ukraine|Alyosha|Sweet People|10
+0477|2010|Russia|Peter Nalitch & Friends|Lost And Forgotten|11
+0478|2010|France|Jessy Matador|Allez Olla Olé|12
+0479|2010|Serbia|Milan Stanković|Ovo Je Balkan|13
+0480|2010|Israel|Harel Skaat|Milim|14
+0481|2010|Spain|Daniel Diges|Algo Pequeñito|15
+0482|2010|Albania|Juliana Pasha|It's All About You|16
+0483|2010|Bosnia & Herzegovina|Vukašin Brajić|Thunder and Lightning|17
+0484|2010|Portugal|Filipa Azevedo|Há Dias Assim|18
+0485|2010|Iceland|Hera Björk|Je Ne Sais Quoi|19
+0486|2010|Norway|Didrik Solli-Tangen|My Heart Is Yours|20
+0487|2010|Cyprus|Jon Lilygreen & The Islanders|Life Looks Better In Spring|21
+0488|2010|Moldova|Sunstroke Project & Olia Tira|Run Away|22
+0489|2010|Ireland|Niamh Kavanagh|It's For You|23
+0490|2010|Belarus|3+2|Butterflies|24
+0491|2010|United Kingdom|Josh|That Sounds Good To Me|25
+0492|2011|Azerbaijan|Ell/Nikki|Running Scared|1
+0493|2011|Italy|Raphael Gualazzi|Madness Of Love|2
+0494|2011|Sweden|Eric Saade|Popular|3
+0495|2011|Ukraine|Mika Newton|Angel|4
+0496|2011|Denmark|A Friend In London|New Tomorrow|5
+0497|2011|Bosnia & Herzegovina|Dino Merlin|Love In Rewind|6
+0498|2011|Greece|Loucas Yiorkas feat. Stereo Mike|Watch My Dance|7
+0499|2011|Ireland|Jedward|Lipstick|8
+0500|2011|Georgia|Eldrine|One More Day|9
+0501|2011|Germany|Lena|Taken By A Stranger|10
+0502|2011|United Kingdom|Blue|I Can|11
+0503|2011|Moldova|Zdob și Zdub|So Lucky|12
+0504|2011|Slovenia|Maja Keuc|No One|13
+0505|2011|Serbia|Nina|Čaroban|14
+0506|2011|France|Amaury Vassili|Sognu|15
+0507|2011|Russia|Alexej Vorobjov|Get You|16
+0508|2011|Romania|Hotel FM|Change|17
+0509|2011|Austria|Nadine Beiler|The Secret Is Love|18
+0510|2011|Lithuania|Evelina Sašenko|C'est Ma Vie|19
+0511|2011|Iceland|Sjonni's Friends|Coming Home|20
+0512|2011|Finland|Paradise Oskar|Da Da Dam|21
+0513|2011|Hungary|Kati Wolf|What About My Dreams?|22
+0514|2011|Spain|Lucía Pérez|Que Me Quiten Lo Bailao|23
+0515|2011|Estonia|Getter Jaani|Rockefeller Street|24
+0516|2011|Switzerland|Anna Rossinelli|In Love For A While|25
+0517|2012|Sweden|Loreen|Euphoria|1
+0518|2012|Russia|Buranovskiye Babushki|Party For Everybody|2
+0519|2012|Serbia|Željko Joksimović|Nije Ljubav Stvar|3
+0520|2012|Azerbaijan|Sabina Babayeva|When The Music Dies|4
+0521|2012|Albania|Rona Nishliu|Suus|5
+0522|2012|Estonia|Ott Lepland|Kuula|6
+0523|2012|Turkey|Can Bonomo|Love Me Back|7
+0524|2012|Germany|Roman Lob|Standing Still|8
+0525|2012|Italy|Nina Zilli|L'Amore È Femmina (Out Of Love)|9
+0526|2012|Spain|Pastora Soler|Quédate Conmigo|10
+0527|2012|Moldova|Pasha Parfeny|Lăutar|11
+0528|2012|Romania|Mandinga|Zaleilah|12
+0529|2012|North Macedonia|Kaliopi|Crno I Belo|13
+0530|2012|Lithuania|Donny Montell|Love Is Blind|14
+0531|2012|Ukraine|Gaitana|Be My Guest|15
+0532|2012|Cyprus|Ivi Adamou|La La Love|16
+0533|2012|Greece|Eleftheria Eleftheriou|Aphrodisiac|17
+0534|2012|Bosnia & Herzegovina|Maya Sar|Korake Ti Znam|18
+0535|2012|Ireland|Jedward|Waterline|19
+0536|2012|Iceland|Greta Salóme & Jónsi|Never Forget|20
+0537|2012|Malta|Kurt Calleja|This Is The Night|21
+0538|2012|France|Anggun|Echo (You And I)|22
+0539|2012|Denmark|Soluna Samay|Should've Known Better|23
+0540|2012|Hungary|Compact Disco|Sound Of Our Hearts|24
+0541|2012|United Kingdom|Engelbert Humperdinck|Love Will Set You Free|25
+0542|2012|Norway|Tooji|Stay|26
+0543|2013|Denmark|Emmelie de Forest|Only Teardrops|1
+0544|2013|Azerbaijan|Farid Mammadov|Hold Me|2
+0545|2013|Ukraine|Zlata Ognevich|Gravity|3
+0546|2013|Norway|Margaret Berger|I Feed You My Love|4
+0547|2013|Russia|Dina Garipova|What If|5
+0548|2013|Greece|Koza Mostra feat. Agathon Iakovidis|Alcohol Is Free|6
+0549|2013|Italy|Marco Mengoni|L'Essenziale|7
+0550|2013|Malta|Gianluca|Tomorrow|8
+0551|2013|Netherlands|Anouk|Birds|9
+0552|2013|Hungary|ByeAlex|Kedvesem|10
+0553|2013|Moldova|Aliona Moon|O Mie|11
+0554|2013|Belgium|Roberto Bellarosa|Love Kills|12
+0555|2013|Romania|Cezar|It's My Life|13
+0556|2013|Sweden|Robin Stjernberg|You|14
+0557|2013|Georgia|Nodi Tatishvili & Sophie Gelovani|Waterfall|15
+0558|2013|Belarus|Alyona Lanskaya|Solayoh|16
+0559|2013|Iceland|Eythor Ingi|Ég Á Líf|17
+0560|2013|Armenia|Dorians|Lonely Planet|18
+0561|2013|United Kingdom|Bonnie Tyler|Believe In Me|19
+0562|2013|Estonia|Birgit|Et Uus Saaks Alguse|20
+0563|2013|Germany|Cascada|Glorious|21
+0564|2013|Lithuania|Andrius Pojavis|Something|22
+0565|2013|France|Amandine Bourgeois|L'enfer Et Moi|23
+0566|2013|Finland|Krista Siegfrids|Marry Me|24
+0567|2013|Spain|ESDM|Contigo Hasta El Final (With You Until The End)|25
+0568|2013|Ireland|Ryan Dolan|Only Love Survives|26
+0569|2014|Austria|Conchita Wurst|Rise Like a Phoenix|1
+0570|2014|Netherlands|The Common Linnets|Calm After The Storm|2
+0571|2014|Sweden|Sanna Nielsen|Undo|3
+0572|2014|Armenia|Aram MP3|Not Alone|4
+0573|2014|Hungary|András Kállay-Saunders|Running|5
+0574|2014|Ukraine|Mariya Yaremchuk|Tick - Tock|6
+0575|2014|Russia|Tolmachevy Sisters|Shine|7
+0576|2014|Norway|Carl Espen|Silent Storm|8
+0577|2014|Denmark|Basim|Cliche Love Song|9
+0578|2014|Spain|Ruth Lorenzo|Dancing in the rain|10
+0579|2014|Finland|Softengine|Something Better|11
+0580|2014|Romania|Paula Seling & OVI|Miracle|12
+0581|2014|Switzerland|Sebalter|Hunter Of Stars|13
+0582|2014|Poland|Donatan & Cleo|My Słowianie - We Are Slavic|14
+0583|2014|Iceland|Pollapönk|No Prejudice|15
+0584|2014|Belarus|Teo|Cheesecake|16
+0585|2014|United Kingdom|Molly|Children of the Universe|17
+0586|2014|Germany|Elaiza|Is It Right|18
+0587|2014|Montenegro|Sergej Ćetković|Moj Svijet|19
+0588|2014|Greece|Freaky Fortune feat. RiskyKidd|Rise Up|20
+0589|2014|Italy|Emma|La Mia Città|21
+0590|2014|Azerbaijan|Dilara Kazimova|Start A Fire|22
+0591|2014|Malta|Firelight|Coming Home|23
+0592|2014|San Marino|Valentina Monetta|Maybe (Forse)|24
+0593|2014|Slovenia|Tinkara Kovač|Round and Round|25
+0594|2014|France|TWIN TWIN|Moustache|26
+0595|2015|Sweden|Måns Zelmerlöw|Heroes|1
+0596|2015|Russia|Polina Gagarina|A Million Voices|2
+0597|2015|Italy|Il Volo|Grande Amore|3
+0598|2015|Belgium|Loïc Nottet|Rhythm Inside|4
+0599|2015|Australia|Guy Sebastian|Tonight Again|5
+0600|2015|Latvia|Aminata Savadogo|Love Injected|6
+0601|2015|Estonia|Elina Born & Stig Rästa|Goodbye to Yesterday|7
+0602|2015|Norway|Mørland & Debrah Scarlett|A Monster Like Me|8
+0603|2015|Israel|Nadav Guedj|Golden Boy|9
+0604|2015|Serbia|Bojana Stamenov|Beauty Never Lies|10
+0605|2015|Georgia|Nina Sublatti|Warrior|11
+0606|2015|Azerbaijan|Elnur Hüseynov|Hour Of The Wolf|12
+0607|2015|Montenegro|Knez|Adio|13
+0608|2015|Slovenia|Maraaya|Here for You|14
+0609|2015|Romania|Voltaj|De La Capăt / All Over Again|15
+0610|2015|Armenia|Genealogy|Face The Shadow|16
+0611|2015|Albania|Elhaida Dani|I'm Alive|17
+0612|2015|Lithuania|Monika & Vaidas|This Time|18
+0613|2015|Greece|Maria Elena Kyriakou|One Last Breath|19
+0614|2015|Hungary|Boggie|Wars For Nothing|20
+0615|2015|Spain|Edurne|Amanecer|21
+0616|2015|Cyprus|John Karayiannis|One Thing I Should Have Done|22
+0617|2015|Poland|Monika Kuszyńska|In The Name Of Love|23
+0618|2015|United Kingdom|Electro Velvet|Still in Love with You|24
+0619|2015|France|Lisa Angell|N’oubliez pas|25
+0620|2015|Austria|The Makemakes|I Am Yours|26
+0621|2015|Germany|Ann Sophie|Black Smoke|27
+0622|2016|Ukraine|Jamala|1944|1
+0623|2016|Australia|Dami Im|Sound of Silence|2
+0624|2016|Russia|Sergey Lazarev|You Are the Only One|3
+0625|2016|Bulgaria|Poli Genova|If Love Was a Crime|4
+0626|2016|Sweden|Frans|If I Were Sorry|5
+0627|2016|France|Amir|J'ai Cherché|6
+0628|2016|Armenia|Iveta Mukuchyan|LoveWave|7
+0629|2016|Poland|Michał Szpak|Color of Your Life|8
+0630|2016|Lithuania|Donny Montell|I've Been Waiting for This Night|9
+0631|2016|Belgium|Laura Tesoro|What's the Pressure|10
+0632|2016|Netherlands|Douwe Bob|Slow Down|11
+0633|2016|Malta|Ira Losco|Walk on Water|12
+0634|2016|Austria|Zoë|Loin d'ici|13
+0635|2016|Israel|Hovi Star|Made of Stars|14
+0636|2016|Latvia|Justs|Heartbeat|15
+0637|2016|Italy|Francesca Michielin|No Degree of Separation|16
+0638|2016|Azerbaijan|Samra|Miracle|17
+0639|2016|Serbia|Sanja Vučić ZAA|Goodbye (Shelter)|18
+0640|2016|Hungary|Freddie|Pioneer|19
+0641|2016|Georgia|Nika Kocharov & Young Georgian Lolitaz|Midnight Gold|20
+0642|2016|Cyprus|Minus One|Alter Ego|21
+0643|2016|Spain|Barei|Say Yay!|22
+0644|2016|Croatia|Nina Kraljić|Lighthouse|23
+0645|2016|United Kingdom|Joe & Jake|You're Not Alone|24
+0646|2016|Czechia|Gabriela Gunčíková|I Stand|25
+0647|2016|Germany|Jamie-Lee Kriewitz|Ghost|26
+0648|2017|Portugal|Salvador Sobral|Amar Pelos Dois|1
+0649|2017|Bulgaria|Kristian Kostov|Beautiful Mess|2
+0650|2017|Moldova|Sunstroke Project|Hey Mamma|3
+0651|2017|Belgium|Blanche|City Lights|4
+0652|2017|Sweden|Robin Bengtsson|I Can't Go On|5
+0653|2017|Italy|Francesco Gabbani|Occidentali's Karma|6
+0654|2017|Romania|Ilinca feat. Alex Florea|Yodel It!|7
+0655|2017|Hungary|Joci Pápai|Origo|8
+0656|2017|Australia|Isaiah Firebrace|Don't Come Easy|9
+0657|2017|Norway|Jowst|Grab the Moment|10
+0658|2017|Netherlands|OG3NE|Lights And Shadows|11
+0659|2017|France|Alma|Requiem|12
+0660|2017|Croatia|Jacques Houdek|My Friend|13
+0661|2017|Azerbaijan|Dihaj|Skeletons|14
+0662|2017|United Kingdom|Lucie Jones|Never Give Up on You|15
+0663|2017|Austria|Nathan Trent|Running On Air|16
+0664|2017|Belarus|Naviband|Historyja Majho Zyccia|17
+0665|2017|Armenia|Artsvik|Fly With Me|18
+0666|2017|Greece|Demy|This is Love|19
+0667|2017|Denmark|Anja|Where I Am|20
+0668|2017|Cyprus|Hovig|Gravity|21
+0669|2017|Poland|Kasia Moś|Flashlight|22
+0670|2017|Israel|Imri Ziv|I Feel Alive|23
+0671|2017|Ukraine|O.Torvald|Time|24
+0672|2017|Germany|Levina|Perfect Life|25
+0673|2017|Spain|Manel Navarro|Do It for Your Lover|26
+0674|2018|Israel|Netta Barzilai|Toy|1
+0675|2018|Cyprus|Eleni Foureira|Fuego|2
+0676|2018|Austria|Cesár Sampson|Nobody But You|3
+0677|2018|Germany|Michael Schulte|You Let Me Walk Alone|4
+0678|2018|Italy|Ermal Meta & Fabrizio Moro|Non Mi Avete Fatto Niente|5
+0679|2018|Czechia|Mikolas Josef|Lie To Me|6
+0680|2018|Sweden|Benjamin Ingrosso|Dance You Off|7
+0681|2018|Estonia|Elina Nechayeva|La Forza|8
+0682|2018|Denmark|Rasmussen|Higher Ground|9
+0683|2018|Moldova|DoReDos|My Lucky Day|10
+0684|2018|Albania|Eugent Bushpepa|Mall|11
+0685|2018|Lithuania|Ieva Zasimauskaitė|When We're Old|12
+0686|2018|France|Madame Monsieur|Mercy|13
+0687|2018|Bulgaria|Equinox|Bones|14
+0688|2018|Norway|Alexander Rybak|That's How You Write a Song|15
+0689|2018|Ireland|Ryan O'Shaughnessy|Together|16
+0690|2018|Ukraine|Mélovin|Under the Ladder|17
+0691|2018|Netherlands|Waylon|Outlaw In 'Em|18
+0692|2018|Serbia|Sanja Ilić & Balkanika|Nova Deca|19
+0693|2018|Australia|Jessica Mauboy|We Got Love|20
+0694|2018|Hungary|AWS|Viszlát Nyár|21
+0695|2018|Slovenia|Lea Sirk|Hvala, ne!|22
+0696|2018|Spain|Amaia & Alfred|Tu Canción|23
+0697|2018|United Kingdom|SuRie|Storm|24
+0698|2018|Finland|Saara Aalto|Monsters|25
+0699|2018|Portugal|Cláudia Pascoal|O Jardim|26
+0700|2019|Netherlands|Duncan Laurence|Arcade|1
+0701|2019|Italy|Mahmood|Soldi|2
+0702|2019|Russia|Sergey Lazarev|Scream|3
+0703|2019|Switzerland|Luca Hänni|She Got Me|4
+0704|2019|Sweden|John Lundvik|Too Late for Love|5
+0705|2019|Norway|KEiiNO|Spirit in the Sky|6
+0706|2019|North Macedonia|Tamara Todevska|Proud|7
+0707|2019|Azerbaijan|Chingiz|Truth|8
+0708|2019|Australia|Kate Miller-Heidke|Zero Gravity|9
+0709|2019|Iceland|Hatari|Hatrið mun sigra|10
+0710|2019|Czechia|Lake Malawi|Friend of a Friend|11
+0711|2019|Denmark|Leonora|Love Is Forever|12
+0712|2019|Cyprus|Tamta|Replay|13
+0713|2019|Malta|Michela Pace|Chameleon|14
+0714|2019|Slovenia|Zala Kralj & Gašper Šantl|Sebi|15
+0715|2019|France|Bilal Hassani|Roi|16
+0716|2019|Albania|Jonida Maliqi|Ktheju Tokës|17
+0717|2019|Serbia|Nevena Božović|Kruna|18
+0718|2019|San Marino|Serhat|Say Na Na Na|19
+0719|2019|Estonia|Victor Crone|Storm|20
+0720|2019|Greece|Katerine Duska|Better Love|21
+0721|2019|Spain|Miki|La Venda|22
+0722|2019|Israel|Kobi Marimi|Home|23
+0723|2019|Belarus|Zena|Like It|24
+0724|2019|Germany|S!sters|Sister|25
+0725|2019|United Kingdom|Michael Rice|Bigger Than Us|26
+0726|2021|Italy|Måneskin|Zitti e buoni|1
+0727|2021|France|Barbara Pravi|Voilà|2
+0728|2021|Switzerland|Gjon's Tears|Tout l'univers|3
+0729|2021|Iceland|Daði & Gagnamagnið|10 Years|4
+0730|2021|Ukraine|Go_A|Shum|5
+0731|2021|Finland|Blind Channel|Dark Side|6
+0732|2021|Malta|Destiny|Je Me Casse|7
+0733|2021|Lithuania|The Roop|Discoteque|8
+0734|2021|Russia|Manizha|Russian Woman|9
+0735|2021|Greece|Stefania|Last Dance|10
+0736|2021|Bulgaria|Victoria|Growing Up Is Getting Old|11
+0737|2021|Portugal|The Black Mamba|Love Is On My Side|12
+0738|2021|Moldova|Natalia Gordienko|Sugar|13
+0739|2021|Sweden|Tusse|Voices|14
+0740|2021|Serbia|Hurricane|Loco Loco|15
+0741|2021|Cyprus|Elena Tsagrinou|El Diablo|16
+0742|2021|Israel|Eden Alene|Set Me Free|17
+0743|2021|Norway|TIX|Fallen Angel|18
+0744|2021|Belgium|Hooverphonic|The Wrong Place|19
+0745|2021|Azerbaijan|Efendi|Mata Hari|20
+0746|2021|Albania|Anxhela Peristeri|Karma|21
+0747|2021|San Marino|Senhit feat. Flo Rida|Adrenalina|22
+0748|2021|Netherlands|Jeangu Macrooy|Birth Of A New Age|23
+0749|2021|Spain|Blas Cantó|Voy A Quedarme|24
+0750|2021|Germany|Jendrik|I Don't Feel Hate|25
+0751|2021|United Kingdom|James Newman|Embers|26
+0752|2022|Ukraine|Kalush Orchestra|Stefania|1
+0753|2022|United Kingdom|Sam Ryder|Space Man|2
+0754|2022|Spain|Chanel|SloMo|3
+0755|2022|Sweden|Cornelia Jakobs|Hold Me Closer|4
+0756|2022|Serbia|Konstrakta|In Corpore Sano|5
+0757|2022|Italy|Mahmood & Blanco|Brividi|6
+0758|2022|Moldova|Zdob și Zdub & Advahov Brothers|Trenulețul|7
+0759|2022|Greece|Amanda Georgiadi Tenfjord|Die Together|8
+0760|2022|Portugal|Maro|Saudade, saudade|9
+0761|2022|Norway|Subwoolfer|Give That Wolf a Banana|10
+0762|2022|Netherlands|S10|De Diepte|11
+0763|2022|Poland|Ochman|River|12
+0764|2022|Estonia|Stefan|Hope|13
+0765|2022|Lithuania|Monika Liu|Sentimentai|14
+0766|2022|Australia|Sheldon Riley|Not The Same|15
+0767|2022|Azerbaijan|Nadir Rustamli|Fade To Black|16
+0768|2022|Switzerland|Marius Bear|Boys Do Cry|17
+0769|2022|Romania|WRS|Llámame|18
+0770|2022|Belgium|Jérémie Makiese|Miss You|19
+0771|2022|Armenia|Rosa Linn|Snap|20
+0772|2022|Finland|The Rasmus|Jezebel|21
+0773|2022|Czechia|We Are Domi|Lights Off|22
+0774|2022|Iceland|Systur|Með hækkandi sól|23
+0775|2022|France|Alvan & Ahez|Fulenn|24
+0776|2022|Germany|Malik Harris|Rockstars|25
+0777|2023|Sweden|Loreen|Tattoo|1
+0778|2023|Finland|Käärijä|Cha Cha Cha|2
+0779|2023|Israel|Noa Kirel|Unicorn|3
+0780|2023|Italy|Marco Mengoni|Due vite|4
+0781|2023|Norway|Alessandra|Queen of Kings|5
+0782|2023|Ukraine|Tvorchi|Heart of Steel|6
+0783|2023|Belgium|Gustaph|Because of You|7
+0784|2023|Estonia|Alika|Bridges|8
+0785|2023|Australia|Voyager|Promise|9
+0786|2023|Czechia|Vesna|My Sister's Crown|10
+0787|2023|Lithuania|Monika Linkytė|Stay|11
+0788|2023|Cyprus|Andrew Lambrou|Break a Broken Heart|12
+0789|2023|Croatia|Let 3|Mama ŠČ!|13
+0790|2023|Armenia|Brunette|Future Lover|14
+0791|2023|Austria|Teya & Salena|Who the Hell Is Edgar?|15
+0792|2023|France|La Zarra|Évidemment|16
+0793|2023|Spain|Blanca Paloma|Eaea|17
+0794|2023|Moldova|Pasha Parfeni|Soarele și luna|18
+0795|2023|Poland|Blanka|Solo|19
+0796|2023|Switzerland|Remo Forrer|Watergun|20
+0797|2023|Slovenia|Joker Out|Carpe Diem|21
+0798|2023|Albania|Albina & Familja Kelmendi|Duje|22
+0799|2023|Portugal|Mimicat|Ai coração|23
+0800|2023|Serbia|Luke Black|Samo mi se spava|24
+0801|2023|United Kingdom|Mae Muller|I Wrote a Song|25
+0802|2023|Germany|Lord of the Lost|Blood & Glitter|26
+0803|2024|Switzerland|Nemo|The Code|1
+0804|2024|Croatia|Baby Lasagna|Rim Tim Tagi Dim|2
+0805|2024|Ukraine|alyona alyona & Jerry Heil|Teresa & Maria|3
+0806|2024|France|Slimane|Mon amour|4
+0807|2024|Israel|Eden Golan|Hurricane|5
+0808|2024|Ireland|Bambie Thug|Doomsday Blue|6
+0809|2024|Italy|Angelina Mango|La noia|7
+0810|2024|Armenia|Ladaniva|Jako|8
+0811|2024|Sweden|Marcus & Martinus|Unforgettable|9
+0812|2024|Portugal|Iolanda|Grito|10
+0813|2024|Greece|Marina Satti|Zari|11
+0814|2024|Germany|Isaak|Always on the Run|12
+0815|2024|Luxembourg|Tali|Fighter|13
+0816|2024|Lithuania|Silvester Belt|Luktelk|14
+0817|2024|Cyprus|Silia Kapsis|Liar|15
+0818|2024|Latvia|Dons|Hollow|16
+0819|2024|Serbia|Teya Dora|Ramonda|17
+0820|2024|United Kingdom|Olly Alexander|Dizzy|18
+0821|2024|Finland|Windows95man|No Rules!|19
+0822|2024|Estonia|5miinust & Puuluup|(nendest) narkootikumidest ei tea me (küll) midagi|20
+0823|2024|Georgia|Nutsa Buzaladze|Firefighter|21
+0824|2024|Spain|Nebulossa|Zorra|22
+0825|2024|Slovenia|Raiven|Veronika|23
+0826|2024|Austria|Kaleen|We Will Rave|24
+0827|2024|Norway|Gåte|Ulveham|25
+0828|2025|Austria|JJ|Wasted Love|1
+0829|2025|Israel|Yuval Raphael|New Day Will Rise|2
+0830|2025|Estonia|Tommy Cash|Espresso Macchiato|3
+0831|2025|Sweden|KAJ|Bara bada bastu|4
+0832|2025|Italy|Lucio Corsi|Volevo essere un duro|5
+0833|2025|Greece|Klavdia|Asteromáta|6
+0834|2025|France|Louane|Maman|7
+0835|2025|Albania|Shkodra Elektronike|Zjerm|8
+0836|2025|Ukraine|Ziferblat|Bird of Pray|9
+0837|2025|Switzerland|Zoë Më|Voyage|10
+0838|2025|Finland|Erika Vikman|Ich komme|11
+0839|2025|Netherlands|Claude|C'est la vie|12
+0840|2025|Latvia|Tautumeitas|Bur man laimi|13
+0841|2025|Poland|Justyna Steczkowska|Gaja|14
+0842|2025|Germany|Abor & Tynna|Baller|15
+0843|2025|Lithuania|Katarsis|Tavo akys|16
+0844|2025|Malta|Miriana Conte|Serving|17
+0845|2025|Norway|Kyle Alessandro|Lighter|18
+0846|2025|United Kingdom|Remember Monday|What the Hell Just Happened?|19
+0847|2025|Armenia|Parg|Survivor|20
+0848|2025|Portugal|Napa|Deslocado|21
+0849|2025|Luxembourg|Laura Thorn|La poupée monte le son|22
+0850|2025|Denmark|Sissal|Hallucination|23
+0851|2025|Spain|Melody|Esa diva|24
+0852|2025|Iceland|Væb|Róa|25
+0853|2025|San Marino|Gabry Ponte|Tutta l'Italia|26
+0854|2026|Bulgaria|Dara|Bangaranga|1
+0855|2026|Israel|Noam Bettan|Michelle|2
+0856|2026|Romania|Alexandra Căpitănescu|Choke Me|3
+0857|2026|Australia|Delta Goodrem|Eclipse|4
+0858|2026|Italy|Sal Da Vinci|Per sempre sì|5
+0859|2026|Finland|Linda Lampenius & Pete Parkkonen|Liekinheitin|6
+0860|2026|Denmark|Søren Torpegaard Lund|Før vi går hjem|7
+0861|2026|Moldova|Satoshi|Viva, Moldova!|8
+0862|2026|Ukraine|Leléka|Ridnym|9
+0863|2026|Greece|Akylas|Ferto|10
+0864|2026|France|Monroe|Regarde!|11
+0865|2026|Poland|Alicja|Pray|12
+0866|2026|Albania|Alis|Nân|13
+0867|2026|Norway|Jonas Lovv|Ya Ya Ya|14
+0868|2026|Croatia|Lelek|Andromeda|15
+0869|2026|Czechia|Daniel Zizka|Crossroads|16
+0870|2026|Serbia|Lavina|Kraj mene|17
+0871|2026|Malta|Aidan|Bella|18
+0872|2026|Cyprus|Antigoni|Jalla|19
+0873|2026|Sweden|Felicia|My System|20
+0874|2026|Belgium|Essyla|Dancing on the Ice|21
+0875|2026|Lithuania|Lion Ceccah|Sólo quiero más|22
+0876|2026|Germany|Sarah Engels|Fire|23
+0877|2026|Austria|Cosmó|Tanzschein|24
+0878|2026|United Kingdom|Look Mum No Computer|Eins, Zwei, Drei|25
 `;
 
 /* ---------- Constants ---------- */
@@ -2556,7 +2575,7 @@ function fakeId(key){
 const TERMS = `
 <p><b>What Euroster is.</b> A private, non-commercial fan game for a small group of friends. It is not affiliated with, sponsored or endorsed by Spotify, the EBU or the Eurovision Song Contest. Music plays through your own Spotify app and account.</p>
 <p><b>What is stored, and where.</b> Only in this browser on this device: your Spotify login, the app's Client ID, your chosen speaker, the Spotify track IDs matched to the cards, songs you add yourself, and for the organiser, the names and emails of approved players. There is no Euroster server, no analytics, no ads and no cookies.</p>
-<p><b>What is sent.</b> Playback commands and song searches go straight to Spotify (accounts.spotify.com and api.spotify.com). The camera picture is read on the device to find the QR code and is never uploaded. On phones without a built-in QR reader, the open-source html5-qrcode library is loaded from unpkg.com.</p>
+<p><b>What is sent.</b> Playback commands and song searches go straight to Spotify (accounts.spotify.com and api.spotify.com). The camera picture is read on the device to find the QR code and is never uploaded. On phones without a built-in QR reader, the open-source html5-qrcode library is loaded from unpkg.com. The fonts used on the printed cards load from Google Fonts.</p>
 <p><b>Disconnecting.</b> Tap Disconnect in Settings at any time. It deletes your Spotify login and cached Spotify data from this device straight away. You can also remove access at spotify.com/account/apps.</p>
 <p><b>Terms of use.</b> Euroster is provided as is. No warranties are made on behalf of Spotify, and all implied warranties regarding the Spotify platform, service and content, including merchantability, fitness for a particular purpose and non-infringement, are disclaimed. The organiser is responsible for Euroster, and Spotify has no liability for it. You may not modify, create derivative works of, decompile or reverse-engineer the Spotify platform, service or content. Spotify is a third-party beneficiary of these terms and this privacy note and may enforce them directly. Your use of Spotify is also covered by Spotify's own terms.</p>
 <p><b>Questions.</b> Contact <span class="ownerRef">the person who invited you</span>.</p>`;
@@ -2567,17 +2586,21 @@ function renderTerms(){
 }
 
 /* ---------- Songs ---------- */
-function parseSongs(text){
+function parseSongs(text, custom){
+  let n = 0;
   return String(text || '').split('\n').map(l => l.trim()).filter(Boolean).map(l => {
-    const p = l.split('|').map(x => x.trim());
+    let p = l.split('|').map(x => x.trim());
+    let id = null;
+    if(p.length >= 6 && /^\d{1,5}$/.test(p[0]) && /^\d{4}$/.test(p[1])){ id = p[0].padStart(4, '0'); p = p.slice(1); }
     if(p.length < 4 || !/^\d{4}$/.test(p[0])) return null;
-    return { year: +p[0], country: p[1], artist: p[2], title: p[3], place: p[4] || '' };
+    n++;
+    return { id: id || (custom ? 'C' + String(n).padStart(3, '0') : String(n).padStart(4, '0')), year: +p[0], country: p[1], artist: p[2], title: p[3], place: p[4] || '' };
   }).filter(Boolean);
 }
 let _songs = null;
 function allSongs(){
   if(_songs) return _songs;
-  const list = parseSongs(BUILTIN).concat(parseSongs(LS.get('evh_custom', '')));
+  const list = parseSongs(BUILTIN).concat(parseSongs(LS.get('evh_custom', ''), true));
   list.forEach(s => s.key = s.year + '|' + s.country + '|' + s.title);
   const seen = new Set();
   _songs = list.filter(s => seen.has(s.key) ? false : seen.add(s.key)).sort((a, b) => a.year - b.year);
@@ -2967,57 +2990,90 @@ async function saveFix(i, search){
 
 /* ---------- QR + cards ---------- */
 function qrSvg(text){
-  const q = new EurosterQR(-1, 0); // level M
+  const q = new EurosterQR(-1, 0); // error correction level M
   q.addData(text); q.make();
   const n = q.getModuleCount(); let d = '';
   for(let r = 0; r < n; r++) for(let c = 0; c < n; c++) if(q.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
-  return `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg"><path d="${d}" fill="#000"/></svg>`;
+  return `<svg viewBox="-2 -2 ${n + 4} ${n + 4}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="-2" y="-2" width="${n + 4}" height="${n + 4}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
 }
-function frontCard(s){
-  return `<div class="pc front"><div class="ring"><div class="inner"><div class="qr">${qrSvg(baseUrl() + '#t=' + s.match.id)}</div></div></div></div>`;
+// The QR holds the fixed card number and the Spotify track, so a card works on any phone and never changes.
+function cardLink(s){ return baseUrl() + '#c=' + s.id + '&t=' + s.match.id; }
+function tintFor(year){
+  const y = parseInt(year, 10);
+  if(!y) return '#fff';
+  const t = Math.min(1, Math.max(0, (y - 1956) / (2026 - 1956)));
+  return `hsl(${Math.round(t * 300)} 75% 90%)`;
 }
-function backCard(s){
-  const hue = Math.round(((Math.floor(s.year / 10) * 10 - 1950) / 10) * 42 + 300) % 360;
-  const bg = `linear-gradient(135deg,hsl(${hue} 80% 45%),hsl(${(hue + 40) % 360} 75% 33%))`;
-  return `<div class="pc back" style="background:${bg}">
-    <div class="country">${esc(s.country)}</div>
-    <div class="artist">${esc(s.artist)}</div>
-    <div class="year">${s.year}</div>
-    <div class="title">${esc(s.title)}</div>
-    <div class="place">${esc(placeLabel(s.place))}</div>
-  </div>`;
+function printOpts(){
+  const o = LS.get('evh_print', {});
+  return { size: Math.min(90, Math.max(45, parseFloat(o.size) || 65)), flip: o.flip || 'long', cut: o.cut !== false, tint: o.tint !== false, num: o.num !== false };
+}
+function savePrintOpts(){
+  LS.set('evh_print', { size: $('#pSize').value, flip: $('#pFlip').value, cut: $('#pCut').checked, tint: $('#pTint').checked, num: $('#pNum').checked });
+  if(!$('#cardPreview').hidden) previewCards(true);
+}
+function frontCard(s, o){
+  return `<div class="pcard pfront">${qrSvg(cardLink(s))}${o.num ? `<div class="id">#${esc(s.id)}</div>` : ''}</div>`;
+}
+function backCard(s, o){
+  const pl = placeLabel(s.place);
+  return `<div class="pcard pback" style="--tint:${o.tint ? tintFor(s.year) : '#fff'}">
+    <div class="ctry">${esc(s.country)}</div><div class="yr">${esc(s.year)}</div>
+    <div class="art">${esc(s.artist)}</div><div class="ttl">${s.title ? '\u201c' + esc(s.title) + '\u201d' : ''}</div>
+    ${pl ? `<div class="plc">${esc(pl)}</div>` : ''}</div>`;
 }
 function printable(){
   const m = matches(), ex = excluded();
-  return allSongs().filter(s => !ex.has(s.key) && m[s.key]).map(s => Object.assign({}, s, { match: m[s.key] }));
+  return allSongs().filter(s => !ex.has(s.key) && m[s.key]).map(s => Object.assign({}, s, { match: m[s.key] }))
+    .sort((a, b) => String(a.id).localeCompare(String(b.id), undefined, { numeric: true }));
 }
-function previewCards(){
+let previewPicks = null;
+function previewCards(keep){
+  const o = printOpts();
   let list = printable();
   if(!list.length) list = allSongs().map(s => Object.assign({}, s, { match: { id: fakeId(s.key) } }));
-  const picks = [];
-  const copy = list.slice();
-  while(picks.length < 3 && copy.length) picks.push(copy.splice(Math.floor(Math.random() * copy.length), 1)[0]);
+  if(!keep || !previewPicks){
+    const copy = list.slice(); previewPicks = [];
+    while(previewPicks.length < 3 && copy.length) previewPicks.push(copy.splice(Math.floor(Math.random() * copy.length), 1)[0]);
+  }
   const box = $('#cardPreview');
-  box.innerHTML = picks.map(s => `<div class="side"><span>Front</span>${frontCard(s)}</div><div class="side"><span>Back</span>${backCard(s)}</div>`).join('');
+  box.style.setProperty('--card', o.size + 'mm');
+  box.innerHTML = previewPicks.map(s => `<div class="side"><span>Front</span>${frontCard(s, o)}</div><div class="side"><span>Back</span>${backCard(s, o)}</div>`).join('');
   box.hidden = false;
+}
+function buildSheets(list, o){
+  const cols = Math.floor(200 / o.size), rows = Math.floor(287 / o.size), per = cols * rows;
+  const offX = (210 - cols * o.size) / 2, offY = (297 - rows * o.size) / 2;
+  const gridStyle = `left:${offX}mm;top:${offY}mm;grid-template-columns:repeat(${cols},${o.size}mm);--card:${o.size}mm`;
+  const empty = cls => `<div class="pcard ${cls} pempty"></div>`;
+  let html = '';
+  for(let p = 0; p * per < list.length; p++){
+    const chunk = list.slice(p * per, p * per + per);
+    const fronts = [], backs = new Array(per).fill(empty('pback'));
+    for(let i = 0; i < per; i++){
+      const s = chunk[i], r = Math.floor(i / cols), c = i % cols;
+      fronts.push(s ? frontCard(s, o) : empty('pfront'));
+      if(s){
+        const br = o.flip === 'long' ? r : rows - 1 - r;
+        const bc = o.flip === 'long' ? cols - 1 - c : c;
+        backs[br * cols + bc] = backCard(s, o);
+      }
+    }
+    const cut = o.cut ? ' cut' : '';
+    html += `<div class="psheet${cut}"><div class="cgrid" style="${gridStyle}">${fronts.join('')}</div></div>`;
+    html += `<div class="psheet${cut}"><div class="cgrid" style="${gridStyle}">${backs.join('')}</div></div>`;
+  }
+  return { html, sheets: Math.ceil(list.length / per), per };
 }
 function printCards(){
   const list = printable();
   if(!list.length){ toast('Match some songs on Spotify first'); return; }
   if(DEMO){ previewCards(); toast('Printing is off in the preview. Here are three sample cards.'); return; }
-  for(let i = list.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
-  const blank = '<div class="pc blank"></div>';
-  let html = '';
-  for(let i = 0; i < list.length; i += 12){
-    const chunk = list.slice(i, i + 12);
-    while(chunk.length < 12) chunk.push(null);
-    html += '<div class="page">' + chunk.map(c => c ? frontCard(c) : blank).join('') + '</div>';
-    const back = [];
-    for(let r = 0; r < 4; r++) for(let col = 2; col >= 0; col--) back.push(chunk[r * 3 + col]);
-    html += '<div class="page">' + back.map(c => c ? backCard(c) : blank).join('') + '</div>';
-  }
-  $('#print').innerHTML = html;
-  setTimeout(() => window.print(), 300);
+  const o = printOpts();
+  const b = buildSheets(list, o);
+  $('#print').innerHTML = b.html;
+  toast(`${list.length} cards on ${b.sheets} sheets. Print at 100%, double sided.`);
+  setTimeout(() => window.print(), 400);
 }
 
 /* ---------- Players (organiser) ---------- */
@@ -3111,6 +3167,7 @@ $('#startSel').onchange = e => LS.set('evh_start', e.target.value);
 $('#matchBtn').onclick = runMatching;
 $('#previewBtn').onclick = previewCards;
 $('#printBtn').onclick = printCards;
+['#pSize','#pFlip','#pCut','#pTint','#pNum'].forEach(id => $(id).addEventListener('change', savePrintOpts));
 $('#allBtn').onclick = () => { LS.set('evh_excluded', []); renderSongs(); };
 $('#noneBtn').onclick = () => { LS.set('evh_excluded', allSongs().map(s => s.key)); renderSongs(); };
 $('#songList').addEventListener('change', e => {
@@ -3201,6 +3258,7 @@ $('#demoPending').onclick = () => showWelcome('pending');
   $('#customSongs').value = LS.get('evh_custom', '');
   $('#ownerName').value = LS.get('evh_owner_name', '');
   renderTerms(); renderPlayers(); updatePlayed();
+  { const o = printOpts(); $('#pSize').value = o.size; $('#pFlip').value = o.flip; $('#pCut').checked = o.cut; $('#pTint').checked = o.tint; $('#pNum').checked = o.num; }
 
   if(!DEMO) await handleRedirect();
   updateConn();
