@@ -3433,6 +3433,20 @@ async function hostPlayCurrent(){
   const s = songById(G.cur), mt = s && matches()[s.key];
   DG.err = mt ? await spotifyPlay(mt.id) : 'This song has no Spotify link. Tap Skip to draw another.';
   DG.paused = !!DG.err; renderGame();
+  if(!DG.err && mt && !DEMO) setTimeout(() => checkPlaying(mt.id, G.n), 2500);
+}
+// Spotify can accept a play command without playing (an iPhone app asleep in the background). Check it really started.
+async function checkPlaying(trackId, n){
+  if(!DG.G || DG.G.n !== n || DG.G.phase === 'lobby') return;
+  try{
+    const r = await api('/me/player');
+    let p = null; if(r.status === 200){ try{ p = await r.json(); }catch(e){} }
+    const ok = p && p.is_playing && p.item && p.item.id === trackId;
+    if(ok || !DG.G || DG.G.n !== n) return;
+    const dev = p && p.device ? p.device.name : '';
+    DG.err = `Spotify didn't start the song${dev ? ' on ' + dev : ''}. Open Spotify on the device that should play, start any song so it stays awake, then tap Retry. On an iPhone, Spotify falls asleep in the background unless music is playing.`;
+    DG.paused = true; renderGame();
+  }catch(e){}
 }
 function drawCard(){
   const G = DG.G;
