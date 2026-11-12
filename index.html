@@ -2837,9 +2837,18 @@ async function spotifyPlay(id){
     return '';
   }catch(e){ return e.message; }
 }
+// Pauses or resumes. Returns '' when it worked, 'NO_DEVICE' when nothing is active, or Spotify's own message.
 async function spotifyPause(pause){
-  if(DEMO) return true;
-  try{ const r = await api(pause ? '/me/player/pause' : '/me/player/play', { method: 'PUT' }); return r.ok; }catch(e){ return false; }
+  if(DEMO) return '';
+  try{
+    const dev = LS.get('evh_device', '');
+    const r = await api((pause ? '/me/player/pause' : '/me/player/play') + (dev ? '?device_id=' + encodeURIComponent(dev) : ''), { method: 'PUT' });
+    if(r.ok) return '';
+    let t = '', why = ''; try{ const j = await r.json(); t = (j.error && j.error.message) || ''; why = (j.error && j.error.reason) || ''; }catch(e){}
+    if(r.status === 403 && /already|restriction/i.test(t + ' ' + why)) return '';
+    if(r.status === 404) return pause ? '' : 'NO_DEVICE';
+    return 'Spotify said: ' + (t || 'error ' + r.status) + (why ? ' (' + why + ')' : '');
+  }catch(e){ return 'Couldn\'t reach Spotify: ' + e.message; }
 }
 async function playTrack(id){
   currentId = id; setState('play'); setMsg('');
@@ -3748,7 +3757,7 @@ function renderGame(){
   if(host){
     h += `<div class="card"><b>Music</b><p class="small muted" style="margin:4px 0 0">${st.left} songs left in the deck.</p>${DG.err ? `<p class="small" style="color:var(--warn)">${esc(DG.err)}</p>` : ''}<div class="dg-actions">`;
     if(DG.err && st.phase === 'listen') h += `<button class="btn" data-act="retry">Retry</button>`;
-    else h += `<button class="btn" data-act="pause">${DG.paused ? 'Resume' : 'Pause'}</button>`;
+    h += `<button class="btn" data-act="pause">${DG.paused ? 'Resume' : 'Pause'}</button>`;
     h += `<button class="btn danger" data-act="end">${DG.endArmed ? 'Tap to confirm' : 'End game'}</button></div></div>`;
   } else if(st.phase !== 'over'){
     const me = st.players.find(p => p.id === DG.me);
@@ -3774,7 +3783,17 @@ function onGameClick(e){
     hostAction('l-' + rid(8), { a: 'join', name: n, local: true }, true); return;
   }
   if(act === 'retry'){ hostPlayCurrent(); return; }
-  if(act === 'pause'){ spotifyPause(!DG.paused).then(ok => { if(ok){ DG.paused = !DG.paused; renderGame(); } else toast('Spotify didn\'t respond. Check the speaker.'); }); return; }
+  if(act === 'pause'){
+    (async () => {
+      const resuming = DG.paused;
+      const e = await spotifyPause(!resuming);
+      if(e && resuming && DG.G && DG.G.cur){ await hostPlayCurrent(); if(DG.err) toast(DG.err); return; }
+      if(!e){ DG.paused = !resuming; DG.err = ''; }
+      else { DG.err = e === 'NO_DEVICE' ? 'No Spotify device is active. Open Spotify on the speaker or laptop, then tap Retry.' : e; toast(DG.err); }
+      renderGame();
+    })();
+    return;
+  }
   if(act === 'end' || act === 'leave'){
     if(act === 'end' && !DG.endArmed){ DG.endArmed = true; renderGame(); setTimeout(() => { DG.endArmed = false; renderGame(); }, 4000); return; }
     DG.endArmed = false;
