@@ -2827,10 +2827,27 @@ async function targetDevice(){
     return pick ? pick.id : '';
   }catch(e){ return LS.get('evh_device', ''); }
 }
+// Track details for this account's country (album, playability, regional version). Cached.
+const _tinfo = new Map();
+async function trackInfo(id){
+  if(_tinfo.has(id)) return _tinfo.get(id);
+  try{
+    const r = await api('/tracks/' + id + '?market=from_token');
+    if(!r.ok) return null;
+    const t = await r.json(); _tinfo.set(id, t); return t;
+  }catch(e){ return null; }
+}
+// Since late October 2026 Spotify often accepts a plain track list but plays nothing and clears the player.
+// Starting the track inside its album (context + offset) avoids that.
+function playBody(id, info){
+  const pos = startOffset();
+  if(info && info.album && info.album.uri && info.uri) return { context_uri: info.album.uri, offset: { uri: info.uri }, position_ms: pos };
+  return { uris: ['spotify:track:' + id], position_ms: pos };
+}
 async function spotifyPlay(id){
   if(DEMO) return '';
   try{
-    const body = { uris: ['spotify:track:' + id], position_ms: startOffset() };
+    const body = playBody(id, await trackInfo(id));
     const dev = await targetDevice(); lastDev = dev;
     let r = await api('/me/player/play' + (dev ? '?device_id=' + encodeURIComponent(dev) : ''), { method: 'PUT', body });
     if(r.status === 404){
@@ -2868,23 +2885,18 @@ async function spotifyRepeat(state){
 async function playTrack(id){
   currentId = id; setState('play'); setMsg('');
   if(DEMO){ paused = false; updatePause(); return; }
-  try{
-    const body = { uris: ['spotify:track:' + id], position_ms: startOffset() };
-    const dev = LS.get('evh_device', '');
-    let r = await api('/me/player/play' + (dev ? '?device_id=' + encodeURIComponent(dev) : ''), { method: 'PUT', body });
-    if(r.status === 404){
-      const dj = await (await api('/me/player/devices')).json();
-      const d = (dj.devices || []).find(x => !x.is_restricted);
-      if(!d) throw new Error('No Spotify device found. Open Spotify on your phone or speaker, play anything for a second, then scan the card again.');
-      r = await api('/me/player/play?device_id=' + encodeURIComponent(d.id), { method: 'PUT', body });
-    }
-    if(!r.ok){
-      let t = ''; try{ t = (await r.json()).error.message; }catch(e){}
-      if(r.status === 403) throw new Error('Spotify refused playback' + (t ? ' (' + t + ')' : '') + '. The account needs Premium and must be approved for this app.');
-      throw new Error('Spotify error ' + r.status + (t ? ': ' + t : ''));
-    }
-    paused = false; updatePause();
-  }catch(e){ setMsg(e.message); paused = true; updatePause(); }
+  const e = await spotifyPlay(id);
+  if(e){ setMsg(e.replace('tap Retry', 'scan the card again')); paused = true; updatePause(); return; }
+  paused = false; updatePause();
+  setTimeout(async () => {
+    if(currentId !== id) return;
+    try{
+      const r = await api('/me/player'); const p = r.status === 200 ? await r.json() : null;
+      const it = p && p.item, same = !!it && (it.id === id || (it.linked_from && it.linked_from.id === id) || (_tinfo.get(id) && it.id === _tinfo.get(id).id));
+      if(p && p.is_playing && same){ spotifyRepeat('track'); return; }
+      if(currentId === id){ setMsg(`Spotify didn't start the song${p && p.device ? ' on ' + p.device.name : ''}. Open Spotify there, start any song, then scan the card again.`); paused = true; updatePause(); }
+    }catch(e){}
+  }, 2500);
 }
 async function togglePause(){
   if(DEMO){ paused = !paused; updatePause(); return; }
@@ -3446,12 +3458,8 @@ function broadcast(){
 }
 // Asks Spotify whether a track can play for this account and country. true / false, or null when unknown.
 async function trackPlayable(id){
-  try{
-    const r = await api('/tracks/' + id + '?market=from_token');
-    if(!r.ok) return null;
-    const t = await r.json();
-    return t.is_playable === false ? false : true;
-  }catch(e){ return null; }
+  const t = await trackInfo(id);
+  return !t ? null : (t.is_playable === false ? false : true);
 }
 function markBad(key){ const b = LS.get('evh_bad', []); if(!b.includes(key)){ b.push(key); LS.set('evh_bad', b); } }
 async function hostPlayCurrent(attempt){
@@ -3474,7 +3482,7 @@ async function checkPlaying(trackId, n, card, attempt){
     const r = await api('/me/player');
     let p = null; if(r.status === 200){ try{ p = await r.json(); }catch(e){} }
     const item = p && p.item;
-    const same = !!item && (item.id === trackId || (item.linked_from && item.linked_from.id === trackId));
+    const same = !!item && (item.id === trackId || (item.linked_from && item.linked_from.id === trackId) || (_tinfo.get(trackId) && item.id === _tinfo.get(trackId).id));
     if(p && p.is_playing && same){ spotifyRepeat('track'); return; }
     if(!DG.G || DG.G.n !== n || DG.G.cur !== card) return;
     if(attempt < 1 && G.phase === 'listen' && G.deck.length){
