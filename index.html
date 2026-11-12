@@ -2817,11 +2817,21 @@ function setMsg(t){ $('#playMsg').textContent = t || ''; }
 function updatePause(){ $('#pauseBtn').textContent = paused ? 'Resume' : 'Pause'; $('#eq').classList.toggle('paused', paused); }
 
 // Starts a track on Spotify. Returns an error message, or '' when it worked.
+// The device that should play: whatever is playing right now wins, then the saved choice, then any device.
+let lastDev = '';
+async function targetDevice(){
+  try{
+    const r = await api('/me/player/devices'); if(!r.ok) return LS.get('evh_device', '');
+    const ds = ((await r.json()).devices || []).filter(d => !d.is_restricted);
+    const pick = ds.find(d => d.is_active) || ds.find(d => d.id === LS.get('evh_device', '')) || ds[0];
+    return pick ? pick.id : '';
+  }catch(e){ return LS.get('evh_device', ''); }
+}
 async function spotifyPlay(id){
   if(DEMO) return '';
   try{
     const body = { uris: ['spotify:track:' + id], position_ms: startOffset() };
-    const dev = LS.get('evh_device', '');
+    const dev = await targetDevice(); lastDev = dev;
     let r = await api('/me/player/play' + (dev ? '?device_id=' + encodeURIComponent(dev) : ''), { method: 'PUT', body });
     if(r.status === 404){
       const dj = await (await api('/me/player/devices')).json();
@@ -2841,7 +2851,7 @@ async function spotifyPlay(id){
 async function spotifyPause(pause){
   if(DEMO) return '';
   try{
-    const dev = LS.get('evh_device', '');
+    const dev = lastDev || LS.get('evh_device', '');
     const r = await api((pause ? '/me/player/pause' : '/me/player/play') + (dev ? '?device_id=' + encodeURIComponent(dev) : ''), { method: 'PUT' });
     if(r.ok) return '';
     let t = '', why = ''; try{ const j = await r.json(); t = (j.error && j.error.message) || ''; why = (j.error && j.error.reason) || ''; }catch(e){}
@@ -2853,7 +2863,7 @@ async function spotifyPause(pause){
 // Looping the mystery song keeps Spotify playing, so an iPhone doesn't put it to sleep between turns.
 async function spotifyRepeat(state){
   if(DEMO) return;
-  try{ const dev = LS.get('evh_device', ''); await api('/me/player/repeat?state=' + state + (dev ? '&device_id=' + encodeURIComponent(dev) : ''), { method: 'PUT' }); }catch(e){}
+  try{ const dev = lastDev || LS.get('evh_device', ''); await api('/me/player/repeat?state=' + state + (dev ? '&device_id=' + encodeURIComponent(dev) : ''), { method: 'PUT' }); }catch(e){}
 }
 async function playTrack(id){
   currentId = id; setState('play'); setMsg('');
