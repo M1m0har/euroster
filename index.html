@@ -3601,7 +3601,7 @@ function hostAction(actor, a, host){
       const r = G.res;
       if(r.to){ const p = G.players.find(x => x.id === r.to); const i = p ? p.tl.indexOf(r.card) : -1; if(i >= 0) p.tl.splice(i, 1); }
       const s = songById(r.card);
-      if(s){ const m = LS.get('evh_matches', {}); m[s.key] = null; LS.set('evh_matches', m); DG.voided = (DG.voided || 0) + 1; }
+      if(s){ const m = LS.get('evh_matches', {}); m[s.key] = null; LS.set('evh_matches', m); DG.voided = (DG.voided || 0) + 1; DG.fixq = (DG.fixq || []).concat([r.card]); }
       G.winner = null; drawCard(); break;
     }
     case 'next':
@@ -3838,6 +3838,14 @@ function renderGame(){
   h += `</div>`;
 
   if(host){
+    const fx = (DG.fixq || [])[0], fs = fx && songById(fx);
+    if(fs){
+      const q = encodeURIComponent(fold(fs.title) + ' ' + fold(fs.artist));
+      h += `<div class="card" style="border-color:var(--gold)"><b>Fix the wrong song</b><p class="small" style="margin:6px 0 0">${esc(fs.year)} \u00b7 ${esc(fs.country)}<br><b>${esc(fs.artist)}</b> \u2013 ${esc(fs.title)}</p>
+        <p class="small muted" style="margin:6px 0 0">Find it on Spotify, tap Share > Copy song link, and paste it here. It goes back into the deck.</p>
+        <div class="row" style="flex-wrap:nowrap;margin-top:8px"><input type="text" id="dgFixIn" placeholder="https://open.spotify.com/track/..." autocomplete="off"><button class="btn primary" data-act="fixsave">Save</button></div>
+        <div class="dg-actions"><a class="btn mini" href="https://open.spotify.com/search/${q}" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">Search on Spotify</a><button class="btn mini" data-act="fixlater">Fix later</button></div>${(DG.fixq || []).length > 1 ? `<p class="small muted" style="margin:6px 0 0">${DG.fixq.length - 1} more after this one.</p>` : ''}</div>`;
+    }
     h += `<div class="card"><b>Music</b><p class="small muted" style="margin:4px 0 0">${st.left} songs left in the deck.${DG.voided ? ` ${DG.voided} wrong song${DG.voided > 1 ? 's' : ''} removed; fix ${DG.voided > 1 ? 'them' : 'it'} later under Cards > Retry skipped songs or Fix.` : ''}</p>${DG.err ? `<p class="small" style="color:var(--warn)">${esc(DG.err)}</p>` : ''}<div class="dg-actions">`;
     if(DG.err && st.phase === 'listen') h += `<a class="btn" href="spotify:" style="text-decoration:none;text-align:center">Open Spotify</a><button class="btn" data-act="retry">Retry</button>`;
     h += `<button class="btn" data-act="pause">${DG.paused ? 'Resume' : 'Pause'}</button>`;
@@ -3848,7 +3856,11 @@ function renderGame(){
     h += `<div class="dg-actions" style="margin-bottom:14px"><button class="btn ghost" data-act="leave">Leave game</button></div>`;
   }
   h += `<details class="card"><summary><b>All timelines</b></summary>${st.players.map(p => `<p style="margin:14px 0 0"><b>${esc(p.name)}</b> <span class="small muted">${p.tl.length} cards</span></p>${timelineHtml(p, {})}`).join('')}</details>`;
-  if(box._h !== h){ box._h = h; box.innerHTML = h; }
+  if(box._h !== h){
+    const keep = {}; ['dgFixIn', 'dgLocal'].forEach(id => { const el = document.getElementById(id); if(el && el.value) keep[id] = el.value; });
+    box._h = h; box.innerHTML = h;
+    Object.keys(keep).forEach(id => { const el = document.getElementById(id); if(el) el.value = keep[id]; });
+  }
 }
 function onGameClick(e){
   const b = e.target.closest('[data-act],[data-slot]'); if(!b || b.disabled) return;
@@ -3866,6 +3878,23 @@ function onGameClick(e){
     hostAction('l-' + rid(8), { a: 'join', name: n, local: true }, true); return;
   }
   if(act === 'retry'){ hostPlayCurrent(); return; }
+  if(act === 'fixlater'){ DG.fixq.shift(); renderGame(); return; }
+  if(act === 'fixsave'){
+    const card = DG.fixq[0], s = songById(card), id = extractId($('#dgFixIn').value);
+    if(!s) return;
+    if(!id){ toast('That isn\'t a Spotify song link. In Spotify tap Share > Copy song link.'); return; }
+    (async () => {
+      let name = s.title, artists = s.artist;
+      if(!DEMO){ const t = await trackInfo(id); if(!t){ toast('Spotify doesn\'t know that link. Check it and try again.'); return; } name = t.name; artists = (t.artists || []).map(a => a.name).join(', '); }
+      const m = LS.get('evh_matches', {}); m[s.key] = { id, name, artists, sure: true }; LS.set('evh_matches', m);
+      LS.set('evh_bad', LS.get('evh_bad', []).filter(k => k !== s.key));
+      const G = DG.G;
+      if(G && G.phase !== 'lobby' && G.phase !== 'over' && !G.deck.includes(card) && !G.players.some(p => p.tl.includes(card))) G.deck.splice(Math.floor(Math.random() * (G.deck.length + 1)), 0, card);
+      DG.fixq.shift(); DG.voided = Math.max(0, (DG.voided || 1) - 1);
+      toast(`Fixed. "${name}" is back in the deck.`); broadcast();
+    })();
+    return;
+  }
   if(act === 'pause'){
     (async () => {
       const resuming = DG.paused;
