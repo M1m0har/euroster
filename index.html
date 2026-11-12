@@ -3015,6 +3015,7 @@ function titleScore(it, s){
   return tw.length && tw.filter(w => nw.has(w)).length / tw.length >= 0.75 ? 4 : 0;
 }
 function scoreTrack(it, s){
+  if(it.is_playable === false) return -1;
   if(/\b(karaoke|instrumental|cover|tribute|sped up|slowed|8 ?bit|lullaby)\b/i.test(it.name + ' ' + ((it.album && it.album.name) || ''))) return -1;
   if(!artistOk(it, s)) return -1;
   const ts = titleScore(it, s);
@@ -3027,7 +3028,7 @@ function scoreTrack(it, s){
   return sc;
 }
 async function searchTracks(q){
-  const r = await api('/search?type=track&limit=10&q=' + encodeURIComponent(q));
+  const r = await api('/search?type=track&limit=10&market=from_token&q=' + encodeURIComponent(q));
   if(!r.ok) return [];
   const j = await r.json();
   return (j.tracks && j.tracks.items) || [];
@@ -3425,8 +3426,8 @@ async function keepAwake(){
 
 /* --- host --- */
 function playable(){
-  const m = matches();
-  return allSongs().filter(s => m[s.key]).map(s => s.id);
+  const m = matches(), bad = new Set(LS.get('evh_bad', []));
+  return allSongs().filter(s => m[s.key] && !bad.has(s.key)).map(s => s.id);
 }
 function hostSave(){ if(DG.G){ DG.G.ts = Date.now(); LS.set('evh_dg_host', DG.G); } }
 function pubState(){
@@ -3443,23 +3444,46 @@ function broadcast(){
   for(const c of DG.conns.values()) if(c.open){ try{ c.send({ t: 'state', s: st }); }catch(e){} }
   renderGame();
 }
-async function hostPlayCurrent(){
+// Asks Spotify whether a track can play for this account and country. true / false, or null when unknown.
+async function trackPlayable(id){
+  try{
+    const r = await api('/tracks/' + id + '?market=from_token');
+    if(!r.ok) return null;
+    const t = await r.json();
+    return t.is_playable === false ? false : true;
+  }catch(e){ return null; }
+}
+function markBad(key){ const b = LS.get('evh_bad', []); if(!b.includes(key)){ b.push(key); LS.set('evh_bad', b); } }
+async function hostPlayCurrent(attempt){
+  attempt = attempt || 0;
   const G = DG.G; if(!G || !G.cur) return;
   const s = songById(G.cur), mt = s && matches()[s.key];
+  if(mt && !DEMO && await trackPlayable(mt.id) === false){
+    markBad(s.key);
+    if(attempt < 6 && G.deck.length){ G.cur = G.deck.pop(); broadcast(); return hostPlayCurrent(attempt + 1); }
+  }
   DG.err = mt ? await spotifyPlay(mt.id) : 'This song has no Spotify link. Tap Skip to draw another.';
   DG.paused = !!DG.err; renderGame();
-  if(!DG.err && mt && !DEMO){ spotifyRepeat('track'); setTimeout(() => checkPlaying(mt.id, G.n), 2500); }
+  if(!DG.err && mt && !DEMO) setTimeout(() => checkPlaying(mt.id, G.n, G.cur, attempt), 2500);
 }
-// Spotify can accept a play command without playing (an iPhone app asleep in the background). Check it really started.
-async function checkPlaying(trackId, n){
-  if(!DG.G || DG.G.n !== n || DG.G.phase === 'lobby') return;
+// Spotify can accept a play command without playing. Check it really started; if not, try the next song once.
+async function checkPlaying(trackId, n, card, attempt){
+  const G = DG.G;
+  if(!G || G.n !== n || G.cur !== card || G.phase === 'lobby') return;
   try{
     const r = await api('/me/player');
     let p = null; if(r.status === 200){ try{ p = await r.json(); }catch(e){} }
-    const ok = p && p.is_playing && p.item && p.item.id === trackId;
-    if(ok || !DG.G || DG.G.n !== n) return;
+    const item = p && p.item;
+    const same = !!item && (item.id === trackId || (item.linked_from && item.linked_from.id === trackId));
+    if(p && p.is_playing && same){ spotifyRepeat('track'); return; }
+    if(!DG.G || DG.G.n !== n || DG.G.cur !== card) return;
+    if(attempt < 1 && G.phase === 'listen' && G.deck.length){
+      const s = songById(card); if(s && p && p.device) markBad(s.key);
+      G.cur = G.deck.pop(); broadcast(); hostPlayCurrent(attempt + 1); return;
+    }
     const dev = p && p.device ? p.device.name : '';
-    DG.err = `Spotify didn't start the song${dev ? ' on ' + dev : ''}. Open Spotify on the device that should play, start any song so it stays awake, then tap Retry. On an iPhone, Spotify falls asleep in the background unless music is playing.`;
+    const state = !p ? 'no device active' : (p.is_playing ? 'playing' : 'paused') + (item ? (same ? ', right song loaded' : ', a different song loaded') : ', no song loaded');
+    DG.err = `Spotify didn't start the song${dev ? ' on ' + dev : ''} (${state}). Open Spotify on the device that should play, start any song, then tap Retry.`;
     DG.paused = true; renderGame();
   }catch(e){}
 }
