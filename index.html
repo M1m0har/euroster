@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://accounts.spotify.com https://api.spotify.com; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://accounts.spotify.com https://api.spotify.com https://0.peerjs.com wss://0.peerjs.com; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
@@ -98,6 +98,51 @@ code{font-family:var(--mono);background:var(--bg-deep);padding:2px 6px;border-ra
 @keyframes eq{0%,100%{height:20%}50%{height:100%}}
 .mystery{font-size:22px;font-weight:800;text-align:center;margin:0}
 @media (prefers-reduced-motion:reduce){.eq i,.fakecam .scanline{animation:none;height:60%}}
+
+/* Mode switch + digital game */
+.seg2{display:flex;background:var(--bg-deep);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;margin-bottom:14px}
+.seg2 button{flex:1;border:0;background:none;color:var(--muted);padding:10px 8px;border-radius:9px;font-weight:700;cursor:pointer}
+.seg2 button.on{background:var(--panel-2);color:var(--text)}
+.dg-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.dg-code{font:800 30px/1 var(--mono);letter-spacing:.16em}
+.dg-qr{width:190px;max-width:60vw;background:#fff;border-radius:12px;padding:8px;margin:10px auto}
+.dg-qr svg{display:block;width:100%;height:auto}
+.score{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:5px 11px;font-size:13px;font-weight:600}
+.chip b{font-variant-numeric:tabular-nums}
+.chip.turn{border-color:var(--pink);box-shadow:inset 0 0 0 1px var(--pink)}
+.chip.off{opacity:.55}
+.chip .tag2{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dg-title{font-size:20px;font-weight:800;margin:0 0 4px;text-wrap:balance}
+.tl{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.tcard{display:flex;align-items:center;gap:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.tcard .y{font:800 22px/1 var(--font);font-variant-numeric:tabular-nums;min-width:54px}
+.tcard .w{min-width:0;font-size:13px;line-height:1.3}
+.tcard .w div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tcard .w .c{color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.tcard.new{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.gap{display:block;width:100%;border:1.5px dashed var(--line);background:none;color:var(--muted);border-radius:10px;padding:9px;font-weight:600;font-size:13px;cursor:pointer;text-align:center}
+.gap:hover{border-color:var(--muted)}
+.gap.sel{border-style:solid;border-color:var(--pink);color:var(--text);background:rgba(255,31,142,.14)}
+.mark{border-radius:10px;padding:9px 12px;font-weight:700;font-size:13px;text-align:center}
+.mark.place{background:rgba(255,31,142,.14);border:1.5px solid var(--pink)}
+.mark.chal{background:rgba(63,208,255,.12);border:1.5px solid var(--cyan)}
+.mark.ok{background:rgba(59,227,154,.12);border:1.5px solid var(--ok)}
+.revealc{border-radius:16px;padding:18px 16px;text-align:center;color:#111;margin:6px 0 12px}
+.revealc .c{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#333}
+.revealc .y{font:900 64px/.95 var(--pdisplay);color:#0d0f1c;font-variant-numeric:tabular-nums}
+.revealc .a{font-weight:700;font-size:17px;margin-top:4px}
+.revealc .t{font-style:italic;font-size:15px}
+.revealc .pl{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#444;margin-top:8px}
+.result{font-size:17px;font-weight:800;text-align:center;margin:4px 0}
+.result.good{color:var(--ok)} .result.bad{color:var(--bad)}
+.dg-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.dg-actions .btn{flex:1 1 auto}
+.netdot{width:9px;height:9px;border-radius:50%;background:var(--warn);display:inline-block}
+.netdot.ok{background:var(--ok)}
+.plist{list-style:none;padding:0;margin:8px 0 0}
+.plist li{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.plist li span{flex:1;min-width:0}
 
 /* Cards tab */
 .songs{list-style:none;padding:0;margin:0}
@@ -195,6 +240,11 @@ ol.steps li{margin:7px 0;font-size:14px}
 
   <!-- PLAY -->
   <section id="tab-play" class="on">
+    <div class="seg2" role="group" aria-label="How to play">
+      <button id="modeCards" class="on">Printed cards</button>
+      <button id="modeDigital">Digital game</button>
+    </div>
+    <div id="scanMode">
     <div class="row between">
       <div class="status"><span class="dot" id="connDot"></span><span id="connText">Not connected</span></div>
       <div class="row" style="gap:8px"><span class="pill" id="playedPill">0 cards played</span><button class="btn mini" id="newGameBtn">New game</button></div>
@@ -219,6 +269,25 @@ ol.steps li{margin:7px 0;font-size:14px}
       </div>
     </div>
     <div class="msg" id="playMsg" role="status"></div>
+    </div>
+    <div id="digiMode" hidden>
+      <div id="dgStart">
+        <div class="card">
+          <b>Play without printed cards</b>
+          <p class="muted small">One phone hosts and plays the music on Spotify. Everyone else joins on their own phone and places the songs there. They don't need Spotify. Keep the tokens physical.</p>
+          <label for="dgName">Your name</label>
+          <input type="text" id="dgName" maxlength="16" autocomplete="nickname" placeholder="Your first name">
+          <div class="dg-actions"><button class="btn primary" id="dgHostBtn">Host a game</button></div>
+        </div>
+        <div class="card">
+          <b>Join a game</b>
+          <p class="muted small">Scan the host's QR code, or type the game code shown on the host phone.</p>
+          <div class="row" style="flex-wrap:nowrap"><input type="text" id="dgCode" maxlength="5" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Game code" style="text-transform:uppercase"><button class="btn primary" id="dgJoinBtn">Join</button></div>
+        </div>
+        <div class="msg" id="dgMsg" role="status"></div>
+      </div>
+      <div id="dgGame" hidden></div>
+    </div>
   </section>
 
   <!-- CARDS -->
@@ -233,6 +302,11 @@ ol.steps li{margin:7px 0;font-size:14px}
       </div>
       <div class="progress"><div id="prog"></div></div>
       <p class="small muted" id="cardStats"></p>
+      <details id="exportBox" style="margin-top:4px"><summary class="small"><b>Export song links</b></summary>
+        <p class="small muted">Saves every Spotify link on this phone, including fixes, to a small file. Send it to Mimo so the links can be built into the app for every phone.</p>
+        <div class="row"><button class="btn mini" id="expShare">Share file</button><button class="btn mini" id="expDownload">Download file</button><button class="btn mini" id="expCopy">Copy as text</button></div>
+        <p class="small muted" id="expInfo"></p>
+      </details>
       <details style="margin-top:12px"><summary class="small"><b>Print settings</b></summary>
         <div class="popts">
           <label class="small" for="pSize">Card size (mm)<input type="text" inputmode="numeric" id="pSize" value="65"></label>
@@ -2574,7 +2648,7 @@ function fakeId(key){
 const TERMS = `
 <p><b>What Euroster is.</b> A private, non-commercial fan game for a small group of friends. It is not affiliated with, sponsored or endorsed by Spotify, the EBU or the Eurovision Song Contest. Music plays through your own Spotify app and account.</p>
 <p><b>What is stored, and where.</b> Only in this browser on this device: your Spotify login, the app's Client ID, your chosen speaker, the Spotify track IDs matched to the cards, songs you add yourself, and for the organiser, the names and emails of approved players. There is no Euroster server, no analytics, no ads and no cookies.</p>
-<p><b>What is sent.</b> Playback commands and song searches go straight to Spotify (accounts.spotify.com and api.spotify.com). The camera picture is read on the device to find the QR code and is never uploaded. On phones without a built-in QR reader, the open-source html5-qrcode library is loaded from unpkg.com. The fonts used on the printed cards load from Google Fonts.</p>
+<p><b>What is sent.</b> Playback commands and song searches go straight to Spotify (accounts.spotify.com and api.spotify.com). The camera picture is read on the device to find the QR code and is never uploaded. On phones without a built-in QR reader, the open-source html5-qrcode library is loaded from unpkg.com. The fonts used on the printed cards load from Google Fonts.</p>\n<p><b>Digital game.</b> To link phones in a digital game, Euroster uses the free PeerJS service (0.peerjs.com) to introduce the phones to each other. Player names, card numbers and placements then go directly between the phones. No Spotify data is shared with other players' phones, and only the host phone talks to Spotify.</p>
 <p><b>Disconnecting.</b> Tap Disconnect in Settings at any time. It deletes your Spotify login and cached Spotify data from this device straight away. You can also remove access at spotify.com/account/apps.</p>
 <p><b>Terms of use.</b> Euroster is provided as is. No warranties are made on behalf of Spotify, and all implied warranties regarding the Spotify platform, service and content, including merchantability, fitness for a particular purpose and non-infringement, are disclaimed. The organiser is responsible for Euroster, and Spotify has no liability for it. You may not modify, create derivative works of, decompile or reverse-engineer the Spotify platform, service or content. Spotify is a third-party beneficiary of these terms and this privacy note and may enforce them directly. Your use of Spotify is also covered by Spotify's own terms.</p>
 <p><b>Questions.</b> Contact <span class="ownerRef">the person who invited you</span>.</p>`;
@@ -2593,7 +2667,7 @@ function parseSongs(text, custom){
     if(p.length >= 6 && /^\d{1,5}$/.test(p[0]) && /^\d{4}$/.test(p[1])){ id = p[0].padStart(4, '0'); p = p.slice(1); }
     if(p.length < 4 || !/^\d{4}$/.test(p[0])) return null;
     n++;
-    return { id: id || (custom ? 'C' + String(n).padStart(3, '0') : String(n).padStart(4, '0')), year: +p[0], country: p[1], artist: p[2], title: p[3], place: p[4] || '' };
+    return { id: id || (custom ? 'C' + String(n).padStart(3, '0') : String(n).padStart(4, '0')), year: +p[0], country: p[1], artist: p[2], title: p[3], place: p[4] || '', track: p[5] || '' };
   }).filter(Boolean);
 }
 let _songs = null;
@@ -2742,6 +2816,31 @@ function setState(s){
 function setMsg(t){ $('#playMsg').textContent = t || ''; }
 function updatePause(){ $('#pauseBtn').textContent = paused ? 'Resume' : 'Pause'; $('#eq').classList.toggle('paused', paused); }
 
+// Starts a track on Spotify. Returns an error message, or '' when it worked.
+async function spotifyPlay(id){
+  if(DEMO) return '';
+  try{
+    const body = { uris: ['spotify:track:' + id], position_ms: startOffset() };
+    const dev = LS.get('evh_device', '');
+    let r = await api('/me/player/play' + (dev ? '?device_id=' + encodeURIComponent(dev) : ''), { method: 'PUT', body });
+    if(r.status === 404){
+      const dj = await (await api('/me/player/devices')).json();
+      const d = (dj.devices || []).find(x => !x.is_restricted);
+      if(!d) return 'No Spotify device found. Open Spotify on a phone or speaker, play anything for a second, then tap Retry.';
+      r = await api('/me/player/play?device_id=' + encodeURIComponent(d.id), { method: 'PUT', body });
+    }
+    if(!r.ok){
+      let t = ''; try{ t = (await r.json()).error.message; }catch(e){}
+      if(r.status === 403) return 'Spotify refused playback' + (t ? ' (' + t + ')' : '') + '. The account needs Premium and must be approved for this app.';
+      return 'Spotify error ' + r.status + (t ? ': ' + t : '');
+    }
+    return '';
+  }catch(e){ return e.message; }
+}
+async function spotifyPause(pause){
+  if(DEMO) return true;
+  try{ const r = await api(pause ? '/me/player/pause' : '/me/player/play', { method: 'PUT' }); return r.ok; }catch(e){ return false; }
+}
 async function playTrack(id){
   currentId = id; setState('play'); setMsg('');
   if(DEMO){ paused = false; updatePause(); return; }
@@ -2923,7 +3022,15 @@ function demoMatch(s, i){
   if(i % 41 === 17) return null;
   return { id: fakeId(s.key), name: s.title, artists: s.artist, sure: i % 13 !== 5 };
 }
-function matches(){ return LS.get('evh_matches', {}); }
+// Links built into the app (from the shared export) plus any made or fixed on this phone, which win.
+let _builtinM = null;
+function builtinMatches(){
+  if(_builtinM) return _builtinM;
+  const o = {};
+  allSongs().forEach(s => { if(s.track === '-') o[s.key] = null; else if(/^[A-Za-z0-9]{22}$/.test(s.track)) o[s.key] = { id: s.track, name: s.title, artists: s.artist, sure: true }; });
+  return (_builtinM = o);
+}
+function matches(){ return Object.assign({}, builtinMatches(), LS.get('evh_matches', {})); }
 function excluded(){ return new Set(LS.get('evh_excluded', [])); }
 let fixOpen = null;
 
@@ -2957,7 +3064,7 @@ async function runMatching(){
     for(let i = 0; i < todo.length; i++){
       const s = todo[i];
       const res = DEMO ? demoMatch(s, list.indexOf(s)) : await matchSong(s);
-      const m = matches(); m[s.key] = res; LS.set('evh_matches', m);
+      const m = LS.get('evh_matches', {}); m[s.key] = res; LS.set('evh_matches', m);
       $('#prog').style.width = ((i + 1) / todo.length * 100) + '%';
       if(i % 8 === 7) renderSongs();
       await sleep(DEMO ? 12 : 150);
@@ -2982,7 +3089,7 @@ async function saveFix(i, search){
         res = { id: t.id, name: t.name, artists: t.artists.map(a => a.name).join(', '), sure: true };
       }
     }
-    const m = matches(); m[s.key] = res; LS.set('evh_matches', m);
+    const m = LS.get('evh_matches', {}); m[s.key] = res; LS.set('evh_matches', m);
     fixOpen = null; renderSongs(); toast(res ? 'Saved' : 'Still no match. Paste a link instead.');
   }catch(e){ toast(e.message); }
 }
@@ -3149,6 +3256,30 @@ $('#scanBtn').onclick = startScan;
 $('#nextBtn').onclick = startScan;
 $('#cancelScan').onclick = async () => { await stopScan(); setState(currentId ? 'play' : 'idle'); };
 $('#pauseBtn').onclick = togglePause;
+$('#modeCards').onclick = () => setMode('cards');
+$('#modeDigital').onclick = () => setMode('digital');
+$('#dgGame').addEventListener('click', onGameClick);
+$('#dgGame').addEventListener('change', onGameChange);
+$('#dgName').addEventListener('input', e => LS.set('evh_dg_name', e.target.value.trim()));
+$('#dgHostBtn').onclick = () => {
+  const name = $('#dgName').value.trim();
+  if(!isConnected()){ dgMsg('Hosting needs Spotify. Connect it in Settings, or join someone else\'s game.'); return; }
+  if(!name){ dgMsg('Type your name first. Clear it later in the lobby if you only host the music.'); $('#dgName').focus(); return; }
+  dgMsg(''); hostCreate(name);
+};
+$('#dgJoinBtn').onclick = () => clientJoin($('#dgCode').value, $('#dgName').value.trim());
+$('#dgCode').addEventListener('keydown', e => { if(e.key === 'Enter') $('#dgJoinBtn').click(); });
+$('#expCopy').onclick = () => { const x = exportText(); copyText(x.text); $('#expInfo').textContent = `${x.n} songs exported.`; };
+$('#expDownload').onclick = () => {
+  const { x, file } = exportFile(); const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  $('#expInfo').textContent = `${x.n} songs exported to ${file.name}.`;
+};
+$('#expShare').onclick = async () => {
+  const { x, file } = exportFile();
+  if(navigator.canShare && navigator.canShare({ files: [file] })){ try{ await navigator.share({ files: [file], title: 'Euroster song links' }); $('#expInfo').textContent = `${x.n} songs exported.`; }catch(e){} }
+  else $('#expDownload').click();
+};
 $('#newGameBtn').onclick = newGame;
 $('#connectBtn').onclick = login;
 $('#disconnectBtn').onclick = disconnect;
@@ -3183,7 +3314,7 @@ $('#songList').addEventListener('click', e => {
 });
 $('#saveCustom').onclick = () => {
   const txt = $('#customSongs').value;
-  LS.set('evh_custom', txt); _songs = null; renderSongs(); toast(parseSongs(txt).length + ' custom songs saved');
+  LS.set('evh_custom', txt); _songs = null; _builtinM = null; renderSongs(); toast(parseSongs(txt).length + ' custom songs saved');
 };
 $('#ownerName').addEventListener('input', e => { LS.set('evh_owner_name', e.target.value.trim()); renderPlayers(); renderTerms(); });
 $('#pAdd').onclick = addPlayer;
@@ -3230,6 +3361,463 @@ $('#asOwner').onclick = () => viewAs('owner');
 $('#asFriend').onclick = () => viewAs('guest');
 $('#demoPending').onclick = () => showWelcome('pending');
 
+
+/* ---------- Digital game ----------
+   One phone hosts: it holds the deck, plays music on Spotify and decides every move.
+   Other phones join through PeerJS and only ever see cards after they are revealed. */
+const PEERJS_SRC = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const DG = { role: null, peer: null, conns: new Map(), conn: null, G: null, st: null, me: null, code: '',
+  net: 'off', sel: null, chalAs: null, err: '', paused: false, retry: null, tries: 0, lock: null, endArmed: false };
+function rid(n, chars){ const a = new Uint8Array(n); crypto.getRandomValues(a); const c = chars || 'abcdefghijkmnpqrstuvwxyz23456789'; return Array.from(a, x => c[x % c.length]).join(''); }
+function shuffleArr(a){ for(let i = a.length - 1; i > 0; i--){ const r = new Uint32Array(1); crypto.getRandomValues(r); const j = r[0] % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function songById(id){ if(!songById.m || songById.n !== allSongs().length){ songById.m = new Map(allSongs().map(s => [s.id, s])); songById.n = allSongs().length; } return songById.m.get(id); }
+function cardInfo(id){ const st = DG.st; if(st && st.cards && st.cards[id]) return st.cards[id]; const s = songById(id); return s ? [s.year, s.country, s.artist, s.title, s.place] : [0, '', '', '?', '']; }
+function cardYear(id){ return +cardInfo(id)[0]; }
+function fits(tl, slot, y){ return (slot === 0 || cardYear(tl[slot - 1]) <= y) && (slot === tl.length || y <= cardYear(tl[slot])); }
+function insertSorted(tl, id){ const y = cardYear(id); let i = tl.findIndex(x => cardYear(x) > y); if(i < 0) i = tl.length; tl.splice(i, 0, id); }
+function gapLabel(tl, i){
+  if(!tl.length) return 'Start the timeline';
+  if(i === 0) return 'Before ' + cardYear(tl[0]);
+  if(i === tl.length) return 'After ' + cardYear(tl[tl.length - 1]);
+  const a = cardYear(tl[i - 1]), b = cardYear(tl[i]);
+  return a === b ? 'Also ' + a : `Between ${a} and ${b}`;
+}
+function setMode(m){
+  LS.set('evh_mode', m);
+  $('#modeCards').classList.toggle('on', m === 'cards'); $('#modeDigital').classList.toggle('on', m === 'digital');
+  $('#scanMode').hidden = m !== 'cards'; $('#digiMode').hidden = m !== 'digital';
+  if(m !== 'cards' && !$('#st-scan').hidden){ stopScan(); setState(currentId ? 'play' : 'idle'); }
+}
+function dgMsg(t){ $('#dgMsg').textContent = t || ''; }
+async function loadPeer(){
+  if(window.Peer) return true;
+  for(const src of [PEERJS_SRC, 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js']){ try{ await loadScript(src); if(window.Peer) return true; }catch(e){} }
+  return false;
+}
+async function keepAwake(){
+  try{ if('wakeLock' in navigator && !DG.lock && document.visibilityState === 'visible'){ DG.lock = await navigator.wakeLock.request('screen'); DG.lock.addEventListener('release', () => { DG.lock = null; }); } }catch(e){}
+}
+
+/* --- host --- */
+function playable(){
+  const m = matches();
+  return allSongs().filter(s => m[s.key]).map(s => s.id);
+}
+function hostSave(){ if(DG.G){ DG.G.ts = Date.now(); LS.set('evh_dg_host', DG.G); } }
+function pubState(){
+  const G = DG.G, cards = {};
+  const add = id => { const s = songById(id); if(s) cards[id] = [s.year, s.country, s.artist, s.title, s.place]; };
+  G.players.forEach(p => p.tl.forEach(add));
+  if(G.res) add(G.res.card);
+  return { code: G.code, phase: G.phase, target: G.target, n: G.n, turn: G.turn, place: G.place, chal: G.chal, res: G.res, winner: G.winner,
+    left: G.deck.length, cards, players: G.players.map(p => ({ id: p.id, name: p.name, local: p.local, tl: p.tl, on: p.local || DG.conns.has(p.id) })) };
+}
+function broadcast(){
+  hostSave();
+  const st = pubState(); DG.st = st;
+  for(const c of DG.conns.values()) if(c.open){ try{ c.send({ t: 'state', s: st }); }catch(e){} }
+  renderGame();
+}
+async function hostPlayCurrent(){
+  const G = DG.G; if(!G || !G.cur) return;
+  const s = songById(G.cur), mt = s && matches()[s.key];
+  DG.err = mt ? await spotifyPlay(mt.id) : 'This song has no Spotify link. Tap Skip to draw another.';
+  DG.paused = !!DG.err; renderGame();
+}
+function drawCard(){
+  const G = DG.G;
+  G.place = null; G.chal = []; G.res = null; G.n++;
+  if(!G.deck.length){ G.cur = null; G.phase = 'over'; G.winner = leaderId(); return; }
+  G.cur = G.deck.pop(); G.phase = 'listen';
+  hostPlayCurrent();
+}
+function leaderId(){ const G = DG.G; let best = null; G.players.forEach(p => { if(!best || p.tl.length > best.tl.length) best = p; }); return best ? best.id : null; }
+function hostCreate(name){
+  let code = rid(5, CODE_CHARS);
+  DG.G = { v: 1, code, phase: 'lobby', target: 10, n: 0, turn: 0, deck: [], cur: null, place: null, chal: [], res: null, winner: null,
+    players: name ? [{ id: 'h-' + rid(8), name, local: true, tl: [] }] : [] };
+  DG.role = 'host'; LS.set('evh_dg_role', 'host');
+  hostSave(); showGame(); hostStartPeer(); broadcast();
+}
+function hostStartGame(){
+  const G = DG.G, ids = playable();
+  if(G.players.length < 1){ toast('Add at least one player'); return; }
+  if(ids.length < G.players.length * (G.target + 3)){ toast(`Only ${ids.length} songs have Spotify links. Match songs in the Cards tab first.`); return; }
+  G.deck = shuffleArr(ids.slice());
+  G.players.forEach(p => { p.tl = [G.deck.pop()]; });
+  G.turn = Math.floor(Math.random() * G.players.length); G.winner = null;
+  drawCard(); broadcast(); keepAwake();
+}
+function activeP(){ const G = DG.G || DG.st; return G && G.players[G.turn]; }
+// actor: player id the move is made for. host: true when it comes from the host phone.
+function hostAction(actor, a, host){
+  const G = DG.G; if(!G) return;
+  const act = G.players[G.turn];
+  const isActive = act && act.id === actor;
+  const stale = a.n !== undefined && a.n !== G.n;
+  switch(a.a){
+    case 'join': {
+      const name = String(a.name || 'Player').trim().slice(0, 16) || 'Player';
+      let p = G.players.find(x => x.id === actor);
+      if(p){ p.name = name; break; }
+      if(G.phase === 'over') break;
+      p = { id: actor, name, local: !!a.local, tl: [] };
+      if(G.phase !== 'lobby'){ if(!G.deck.length) break; p.tl = [G.deck.pop()]; }
+      G.players.push(p);
+      break;
+    }
+    case 'remove': {
+      if(!host) return;
+      const i = G.players.findIndex(x => x.id === a.pid); if(i < 0) return;
+      G.players.splice(i, 1);
+      const c = DG.conns.get(a.pid); if(c){ try{ c.send({ t: 'bye' }); }catch(e){} DG.conns.delete(a.pid); }
+      if(G.phase !== 'lobby' && G.phase !== 'over'){
+        if(!G.players.length){ G.phase = 'lobby'; break; }
+        if(i < G.turn) G.turn--;
+        else if(i === G.turn){ G.turn = G.turn % G.players.length; drawCard(); }
+        G.chal = G.chal.filter(c => c.pid !== a.pid);
+      }
+      break;
+    }
+    case 'remove_me': { if(G.phase !== 'lobby') return; const i = G.players.findIndex(x => x.id === actor); if(i >= 0) G.players.splice(i, 1); const c = DG.conns.get(actor); if(c){ DG.conns.delete(actor); } break; }
+    case 'target': if(host && G.phase === 'lobby') G.target = Math.max(3, Math.min(20, +a.v || 10)); break;
+    case 'start': if(host && (G.phase === 'lobby' || G.phase === 'over')) { hostStartGame(); return; } break;
+    case 'lock':
+      if(stale || G.phase !== 'listen' || !(isActive || host)) return;
+      if(!(a.slot >= 0 && a.slot <= act.tl.length)) return;
+      G.place = a.slot; G.phase = 'challenge'; break;
+    case 'chal': {
+      if(stale || G.phase !== 'challenge' || isActive) return;
+      const who = G.players.find(x => x.id === actor); if(!who) return;
+      if(!(a.slot >= 0 && a.slot <= act.tl.length) || a.slot === G.place) return;
+      if(G.chal.some(c => c.slot === a.slot || c.pid === actor)) return;
+      G.chal.push({ pid: actor, slot: a.slot }); break;
+    }
+    case 'unchal': if(G.phase === 'challenge') G.chal = G.chal.filter(c => c.pid !== actor); break;
+    case 'reveal': {
+      if(stale || G.phase !== 'challenge' || !(isActive || host)) return;
+      const y = cardYear(G.cur), tl = act.tl;
+      if(fits(tl, G.place, y)){ G.res = { card: G.cur, ok: true, to: act.id, by: 'place', slot: G.place }; tl.splice(G.place, 0, G.cur); }
+      else {
+        const c = G.chal.find(c => fits(tl, c.slot, y));
+        const right = Array.from({ length: tl.length + 1 }, (_, i) => i).filter(i => fits(tl, i, y));
+        if(c){ G.res = { card: G.cur, ok: false, to: c.pid, by: 'chal', slot: c.slot, right }; insertSorted(G.players.find(x => x.id === c.pid).tl, G.cur); }
+        else G.res = { card: G.cur, ok: false, to: null, by: 'none', right };
+      }
+      G.cur = null; G.phase = 'reveal';
+      const w = G.players.find(p => p.tl.length >= G.target);
+      if(w){ G.phase = 'over'; G.winner = w.id; }
+      break;
+    }
+    case 'buy':
+      if(stale || G.phase !== 'listen' || !(isActive || host)) return;
+      G.res = { card: G.cur, ok: true, to: act.id, by: 'buy' }; insertSorted(act.tl, G.cur); G.cur = null; G.phase = 'reveal';
+      if(act.tl.length >= G.target){ G.phase = 'over'; G.winner = act.id; }
+      break;
+    case 'skip':
+      if(stale || G.phase !== 'listen' || !(isActive || host)) return;
+      drawCard(); break;
+    case 'next':
+      if(stale || G.phase !== 'reveal') return;
+      G.turn = (G.turn + 1) % G.players.length; drawCard(); break;
+    default: return;
+  }
+  broadcast();
+}
+function onHostData(conn, d){
+  if(!d || typeof d !== 'object') return;
+  if(d.t === 'hello'){
+    const pid = String(d.pid || '').slice(0, 24); if(!pid) return;
+    const old = DG.conns.get(pid); if(old && old !== conn){ try{ old.close(); }catch(e){} }
+    conn._pid = pid; DG.conns.set(pid, conn);
+    hostAction(pid, { a: 'join', name: d.name });
+    return;
+  }
+  if(d.t === 'act' && conn._pid && d.a && typeof d.a === 'object') hostAction(conn._pid, d.a, false);
+}
+async function hostStartPeer(){
+  if(DEMO){ DG.net = 'demo'; renderGame(); return; }
+  if(!await loadPeer()){ DG.net = 'nolib'; renderGame(); return; }
+  if(DG.peer){ try{ DG.peer.destroy(); }catch(e){} }
+  const peer = new Peer('euroster-' + DG.G.code.toLowerCase(), { debug: 0 });
+  DG.peer = peer; DG.net = 'connecting'; renderGame();
+  peer.on('open', () => { DG.net = 'ok'; DG.tries = 0; renderGame(); });
+  peer.on('connection', conn => {
+    conn.on('data', d => onHostData(conn, d));
+    conn.on('close', () => { if(conn._pid && DG.conns.get(conn._pid) === conn){ DG.conns.delete(conn._pid); broadcast(); } });
+    conn.on('error', () => {});
+  });
+  peer.on('disconnected', () => { if(peer.destroyed || DG.peer !== peer) return; DG.net = 'reconnecting'; renderGame(); setTimeout(() => { try{ if(!peer.destroyed) peer.reconnect(); }catch(e){} }, 2000); });
+  peer.on('error', err => {
+    if(DG.peer !== peer) return;
+    const t = err && err.type;
+    if(t === 'peer-unavailable') return;
+    DG.net = t === 'unavailable-id' ? 'waiting' : 'offline'; renderGame();
+    clearTimeout(DG.retry);
+    DG.retry = setTimeout(() => { if(DG.role === 'host' && DG.peer === peer && (peer.destroyed || !peer.open)){ DG.tries++; hostStartPeer(); } }, Math.min(15000, 3000 + DG.tries * 1500));
+  });
+}
+
+/* --- client --- */
+function clientSave(){ LS.set('evh_dg_client', { code: DG.code, pid: DG.me, name: DG.name, ts: Date.now() }); }
+async function clientJoin(code, name){
+  code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if(code.length !== 5){ dgMsg('Game codes have 5 letters and numbers.'); return; }
+  if(!name){ dgMsg('Type your name first.'); $('#dgName').focus(); return; }
+  if(DEMO){ dgMsg('Joining another phone is off in the preview. Try hosting instead.'); return; }
+  DG.role = 'client'; DG.code = code; DG.name = name;
+  const saved = LS.get('evh_dg_client', null);
+  DG.me = saved && saved.code === code && saved.pid ? saved.pid : 'p-' + rid(10);
+  LS.set('evh_dg_role', 'client'); clientSave();
+  DG.st = null; showGame(); renderGame();
+  if(!await loadPeer()){ DG.net = 'nolib'; renderGame(); return; }
+  clientConnect();
+}
+function clientConnect(){
+  if(DG.role !== 'client') return;
+  clearTimeout(DG.retry);
+  const go = () => {
+    if(DG.conn){ try{ DG.conn.close(); }catch(e){} }
+    const c = DG.peer.connect('euroster-' + DG.code.toLowerCase(), { reliable: true });
+    DG.conn = c;
+    c.on('open', () => { DG.net = 'ok'; DG.tries = 0; c.send({ t: 'hello', pid: DG.me, name: DG.name }); renderGame(); });
+    c.on('data', d => {
+      if(!d) return;
+      if(d.t === 'state'){ const prevN = DG.st && DG.st.n; DG.st = d.s; if(prevN !== d.s.n) DG.sel = null; renderGame(); if(d.s.phase !== 'lobby') keepAwake(); }
+      if(d.t === 'bye'){ dgLeave(true); toast('The host removed you from the game.'); }
+    });
+    c.on('close', () => { if(DG.conn === c && DG.role === 'client'){ DG.net = 'reconnecting'; renderGame(); scheduleRetry(); } });
+    c.on('error', () => {});
+  };
+  if(DG.peer && !DG.peer.destroyed && DG.peer.open){ go(); return; }
+  if(DG.peer){ try{ DG.peer.destroy(); }catch(e){} }
+  const peer = new Peer({ debug: 0 });
+  DG.peer = peer; DG.net = 'connecting'; renderGame();
+  peer.on('open', () => { if(DG.peer === peer) go(); });
+  peer.on('disconnected', () => { if(DG.peer === peer && !peer.destroyed){ setTimeout(() => { try{ peer.reconnect(); }catch(e){} }, 2000); } });
+  peer.on('error', err => {
+    if(DG.peer !== peer) return;
+    DG.net = err && err.type === 'peer-unavailable' ? 'notfound' : 'offline'; renderGame(); scheduleRetry();
+  });
+}
+function scheduleRetry(){
+  clearTimeout(DG.retry);
+  DG.retry = setTimeout(() => { DG.tries++; clientConnect(); }, Math.min(12000, 2500 + DG.tries * 1500));
+}
+function send(a){
+  if(DG.role === 'host'){ return; }
+  if(!DG.conn || !DG.conn.open){ toast('Reconnecting to the host. Try again in a moment.'); return; }
+  DG.conn.send({ t: 'act', a: Object.assign({ n: DG.st ? DG.st.n : 0 }, a) });
+}
+// One entry point for moves from this phone. pid: which player the move is for.
+function doMove(a, pid){
+  if(DG.role === 'host'){ const G = DG.G; hostAction(pid || (activeP() && activeP().id), Object.assign({ n: G.n }, a), true); }
+  else send(a);
+}
+function dgLeave(silent){
+  clearTimeout(DG.retry);
+  if(DG.role === 'host'){ try{ spotifyPause(true); }catch(e){} for(const c of DG.conns.values()){ try{ c.send({ t: 'bye' }); c.close(); }catch(e){} } }
+  if(DG.peer){ try{ DG.peer.destroy(); }catch(e){} }
+  DG.peer = null; DG.conn = null; DG.conns = new Map(); DG.role = null; DG.G = null; DG.st = null; DG.sel = null; DG.net = 'off';
+  LS.del('evh_dg_role'); LS.del('evh_dg_host');
+  if(DG.lock){ try{ DG.lock.release(); }catch(e){} DG.lock = null; }
+  $('#dgGame').hidden = true; $('#dgStart').hidden = false;
+  if(!silent) dgMsg('');
+}
+function showGame(){ $('#dgStart').hidden = true; $('#dgGame').hidden = false; setMode('digital'); switchTab('play'); }
+
+/* --- rendering --- */
+function netText(){
+  return { ok: 'Connected', connecting: 'Connecting…', reconnecting: 'Reconnecting…', waiting: 'Setting up the game code…', offline: 'Connection lost. Retrying…',
+    notfound: 'Game not found yet. Check the code; retrying…', nolib: 'Couldn\'t load the connection library. Check the internet connection and reload.', demo: 'Preview: other phones can\'t join', off: '' }[DG.net] || '';
+}
+function myIds(){ const st = DG.st; if(!st) return []; return DG.role === 'host' ? st.players.filter(p => p.local).map(p => p.id) : [DG.me]; }
+function nameOf(id){ const p = DG.st && DG.st.players.find(x => x.id === id); return p ? p.name : 'Someone'; }
+function tcardHtml(id, cls){
+  const c = cardInfo(id);
+  return `<div class="tcard ${cls || ''}"><div class="y">${esc(c[0])}</div><div class="w"><div class="c">${esc(c[1])}</div><div><b>${esc(c[2])}</b></div><div>${esc(c[3])}</div></div></div>`;
+}
+// opts: pick (selectable gaps), sel, place, chal, mark (array of correct slots), excl (slots not allowed), newId
+function timelineHtml(p, o){
+  o = o || {};
+  const tl = p.tl, parts = [];
+  const chalAt = i => (o.chal || []).find(c => c.slot === i);
+  for(let i = 0; i <= tl.length; i++){
+    const ch = chalAt(i);
+    if(o.place === i) parts.push(`<div class="mark place">${esc(o.placeName || 'Placed')} here</div>`);
+    if(ch) parts.push(`<div class="mark chal">${esc(nameOf(ch.pid))} challenges here</div>`);
+    if(o.pick && o.place !== i && !ch && !(o.excl || []).includes(i))
+      parts.push(`<button class="gap${o.sel === i ? ' sel' : ''}" data-slot="${i}">${o.sel === i ? 'Mystery song goes here' : esc(gapLabel(tl, i))}</button>`);
+    if(i < tl.length) parts.push(tcardHtml(tl[i], tl[i] === o.newId ? 'new' : ''));
+  }
+  return `<div class="tl">${parts.join('')}</div>`;
+}
+function scoreHtml(st){
+  return `<div class="score">${st.players.map((p, i) => `<span class="chip${i === st.turn && st.phase !== 'lobby' ? ' turn' : ''}${p.on ? '' : ' off'}">${esc(p.name)} <b>${p.tl.length}</b>${p.on ? '' : '<span class="tag2">away</span>'}</span>`).join('')}</div>`;
+}
+function renderGame(){
+  const box = $('#dgGame'); if(!box || box.hidden && !DG.role) return;
+  const st = DG.st, host = DG.role === 'host';
+  const net = `<span class="small muted"><span class="netdot${DG.net === 'ok' ? ' ok' : ''}"></span> ${esc(netText())}</span>`;
+  if(!st){
+    box._h = ''; box.innerHTML = `<div class="card"><div class="dg-head"><div><div class="muted small">Joining game</div><div class="dg-code">${esc(DG.code)}</div></div>${net}</div><p class="muted">Waiting for the host phone…</p><div class="dg-actions"><button class="btn" data-act="leave">Cancel</button></div></div>`;
+    return;
+  }
+  const act = st.players[st.turn];
+  const mine = myIds();
+  const iAmActive = act && mine.includes(act.id);
+  const head = `<div class="dg-head"><div><div class="muted small">Game code</div><div class="dg-code">${esc(st.code)}</div></div><div style="text-align:right">${net}<div class="small muted">First to ${st.target} cards wins</div></div></div>`;
+  let h = '';
+
+  if(st.phase === 'lobby'){
+    const link = baseUrl() + '#join=' + st.code;
+    h += `<div class="card">${head}`;
+    if(host){
+      h += `<p class="muted small" style="margin:0">Everyone else scans this, or opens the app and types the code.</p><div class="dg-qr">${qrSvg(link)}</div>`;
+      h += `<b>Players</b><ul class="plist">${st.players.map(p => `<li><span><b>${esc(p.name)}</b> <span class="small muted">${p.local ? 'on this phone' : (p.on ? 'joined' : 'away')}</span></span><button class="btn mini danger" data-act="remove" data-pid="${esc(p.id)}">Remove</button></li>`).join('') || '<li><span class="muted small">No players yet.</span></li>'}</ul>`;
+      h += `<label for="dgLocal">Someone without a phone?</label><div class="row" style="flex-wrap:nowrap"><input type="text" id="dgLocal" maxlength="16" placeholder="Their name"><button class="btn" data-act="addlocal">Add</button></div>`;
+      h += `<label for="dgTarget">Cards to win</label><select id="dgTarget">${[5,6,7,8,9,10,12,15].map(v => `<option value="${v}"${v === st.target ? ' selected' : ''}>${v}</option>`).join('')}</select>`;
+      h += `<div class="dg-actions"><button class="btn primary" data-act="start"${st.players.length ? '' : ' disabled'}>Start game</button><button class="btn danger" data-act="end">${DG.endArmed ? 'Tap to confirm' : 'Cancel game'}</button></div>`;
+    } else {
+      h += `<p class="dg-title">You're in!</p><p class="muted">Waiting for the host to start. Grab two tokens.</p><b>Players</b><ul class="plist">${st.players.map(p => `<li><span><b>${esc(p.name)}</b>${p.id === DG.me ? ' <span class="small muted">you</span>' : ''}</span></li>`).join('')}</ul>`;
+      h += `<div class="dg-actions"><button class="btn" data-act="leave">Leave</button></div>`;
+    }
+    h += `</div>`;
+    if(box._h !== h){ box._h = h; box.innerHTML = h; } return;
+  }
+
+  h += `<div class="card">${head}${scoreHtml(st)}`;
+  const actName = act ? esc(act.name) : '';
+  if(st.phase === 'listen'){
+    if(iAmActive){
+      h += `<p class="dg-title">${host && mine.length > 1 ? actName + ', your turn' : 'Your turn'}</p><p class="muted small" style="margin:0">Listen, then tap where the song fits on your timeline.</p>`;
+      h += timelineHtml(act, { pick: true, sel: DG.sel });
+      h += `<div class="dg-actions"><button class="btn primary" data-act="lock"${DG.sel === null ? ' disabled' : ''}>Lock in</button></div>`;
+      h += `<div class="dg-actions"><button class="btn mini" data-act="skip">Skip song (1 token)</button><button class="btn mini" data-act="buy">Take it free (3 tokens)</button></div>`;
+    } else {
+      h += `<p class="dg-title">${actName} is placing the song</p><p class="muted small" style="margin:0">Listen along. You can challenge once it's locked in.</p>` + timelineHtml(act, {});
+    }
+  } else if(st.phase === 'challenge'){
+    h += `<p class="dg-title">${actName} placed it</p>`;
+    const challengers = st.players.filter(p => p.id !== act.id && mine.includes(p.id));
+    const taken = [st.place].concat(st.chal.map(c => c.slot));
+    let chooser = '';
+    if(challengers.length){
+      if(!challengers.find(p => p.id === DG.chalAs)) DG.chalAs = challengers[0].id;
+      const already = st.chal.find(c => c.pid === DG.chalAs);
+      if(challengers.length > 1) chooser = `<label for="dgChalAs">Challenge as</label><select id="dgChalAs">${challengers.map(p => `<option value="${esc(p.id)}"${p.id === DG.chalAs ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select>`;
+      h += `<p class="muted small" style="margin:0">Think it's wrong? Shout HITSTER, hand over a token, and pick another spot.</p>${chooser}`;
+      h += timelineHtml(act, { place: st.place, placeName: act.name, chal: st.chal, pick: !already, sel: DG.sel, excl: taken });
+      if(already) h += `<div class="dg-actions"><button class="btn" data-act="unchal">Take back challenge</button></div>`;
+      else h += `<div class="dg-actions"><button class="btn" data-act="chal"${DG.sel === null || taken.includes(DG.sel) ? ' disabled' : ''}>Challenge here</button></div>`;
+    } else {
+      h += `<p class="muted small" style="margin:0">Others can challenge now.</p>` + timelineHtml(act, { place: st.place, placeName: act.name, chal: st.chal });
+    }
+    if(iAmActive || host) h += `<div class="dg-actions"><button class="btn primary" data-act="reveal">Reveal</button></div>`;
+    else h += `<p class="small muted" style="text-align:center;margin-top:10px">${actName} reveals when everyone's ready.</p>`;
+  } else if(st.phase === 'reveal' || st.phase === 'over'){
+    const r = st.res;
+    if(r){
+      const c = cardInfo(r.card);
+      const who = r.to ? esc(nameOf(r.to)) : '';
+      let line, cls;
+      if(r.by === 'buy'){ line = `${who} took it with 3 tokens`; cls = 'good'; }
+      else if(r.ok){ line = `Right! ${who} keeps it`; cls = 'good'; }
+      else if(r.by === 'chal'){ line = `Wrong! ${who} steals it`; cls = 'bad'; }
+      else { line = 'Wrong! The card is out'; cls = 'bad'; }
+      h += `<div class="result ${cls}">${line}</div>`;
+      h += `<div class="revealc" style="background:${tintFor(c[0])}"><div class="c">${esc(c[1])}</div><div class="y">${esc(c[0])}</div><div class="a">${esc(c[2])}</div><div class="t">“${esc(c[3])}”</div>${placeLabel(c[4]) ? `<div class="pl">${esc(placeLabel(c[4]))}</div>` : ''}</div>`;
+      h += `<p class="small muted" style="text-align:center;margin:0">Named the title and artist? Take a token.</p>`;
+      const shown = st.players.find(p => p.id === (r.to || act.id)) || act;
+      h += `<p style="margin:14px 0 0"><b>${esc(shown.name)}'s timeline</b></p>` + timelineHtml(shown, { newId: r.to ? r.card : null });
+    }
+    if(st.phase === 'over'){
+      const w = st.players.find(p => p.id === st.winner);
+      h += `<p class="dg-title" style="text-align:center;margin-top:16px">${w ? esc(w.name) + ' wins!' : 'Game over'}</p>`;
+      if(!st.left) h += `<p class="small muted" style="text-align:center">The deck ran out.</p>`;
+      if(host) h += `<div class="dg-actions"><button class="btn primary" data-act="start">Play again</button><button class="btn" data-act="end">${DG.endArmed ? 'Tap to confirm' : 'End game'}</button></div>`;
+      else h += `<div class="dg-actions"><button class="btn" data-act="leave">Leave</button></div>`;
+    } else {
+      const nxt = st.players[(st.turn + 1) % st.players.length];
+      h += `<div class="dg-actions"><button class="btn primary" data-act="next">Next: ${esc(nxt.name)}</button></div>`;
+    }
+  }
+  h += `</div>`;
+
+  if(host){
+    h += `<div class="card"><b>Music</b><p class="small muted" style="margin:4px 0 0">${st.left} songs left in the deck.</p>${DG.err ? `<p class="small" style="color:var(--warn)">${esc(DG.err)}</p>` : ''}<div class="dg-actions">`;
+    if(DG.err && st.phase === 'listen') h += `<button class="btn" data-act="retry">Retry</button>`;
+    else h += `<button class="btn" data-act="pause">${DG.paused ? 'Resume' : 'Pause'}</button>`;
+    h += `<button class="btn danger" data-act="end">${DG.endArmed ? 'Tap to confirm' : 'End game'}</button></div></div>`;
+  } else if(st.phase !== 'over'){
+    const me = st.players.find(p => p.id === DG.me);
+    if(me && (!act || me.id !== act.id)) h += `<div class="card"><b>Your timeline</b>${timelineHtml(me, {})}</div>`;
+    h += `<div class="dg-actions" style="margin-bottom:14px"><button class="btn ghost" data-act="leave">Leave game</button></div>`;
+  }
+  h += `<details class="card"><summary><b>All timelines</b></summary>${st.players.map(p => `<p style="margin:14px 0 0"><b>${esc(p.name)}</b> <span class="small muted">${p.tl.length} cards</span></p>${timelineHtml(p, {})}`).join('')}</details>`;
+  if(box._h !== h){ box._h = h; box.innerHTML = h; }
+}
+function onGameClick(e){
+  const b = e.target.closest('[data-act],[data-slot]'); if(!b || b.disabled) return;
+  const st = DG.st;
+  if(b.dataset.slot !== undefined){ DG.sel = +b.dataset.slot; renderGame(); return; }
+  const act = b.dataset.act;
+  if(act === 'lock'){ doMove({ a: 'lock', slot: DG.sel }); DG.sel = null; return; }
+  if(act === 'chal'){ doMove({ a: 'chal', slot: DG.sel }, DG.chalAs); DG.sel = null; return; }
+  if(act === 'unchal'){ doMove({ a: 'unchal' }, DG.chalAs); return; }
+  if(act === 'reveal' || act === 'next' || act === 'skip' || act === 'buy'){ DG.sel = null; doMove({ a: act }); return; }
+  if(act === 'start'){ doMove({ a: 'start' }); return; }
+  if(act === 'remove'){ doMove({ a: 'remove', pid: b.dataset.pid }); return; }
+  if(act === 'addlocal'){
+    const n = $('#dgLocal').value.trim(); if(!n){ $('#dgLocal').focus(); return; }
+    hostAction('l-' + rid(8), { a: 'join', name: n, local: true }, true); return;
+  }
+  if(act === 'retry'){ hostPlayCurrent(); return; }
+  if(act === 'pause'){ spotifyPause(!DG.paused).then(ok => { if(ok){ DG.paused = !DG.paused; renderGame(); } else toast('Spotify didn\'t respond. Check the speaker.'); }); return; }
+  if(act === 'end' || act === 'leave'){
+    if(act === 'end' && !DG.endArmed){ DG.endArmed = true; renderGame(); setTimeout(() => { DG.endArmed = false; renderGame(); }, 4000); return; }
+    DG.endArmed = false;
+    if(act === 'leave' && DG.role === 'client'){ send({ a: 'remove_me' }); LS.del('evh_dg_client'); }
+    dgLeave(); return;
+  }
+}
+function onGameChange(e){
+  if(e.target.id === 'dgTarget') doMove({ a: 'target', v: +e.target.value });
+  if(e.target.id === 'dgChalAs'){ DG.chalAs = e.target.value; renderGame(); }
+}
+function dgResume(){
+  const role = LS.get('evh_dg_role', null), fresh = o => o && Date.now() - (o.ts || 0) < 12 * 3600 * 1000;
+  if(role === 'host'){
+    const G = LS.get('evh_dg_host', null);
+    if(fresh(G)){ DG.G = G; DG.role = 'host'; showGame(); hostStartPeer(); broadcast(); return true; }
+  } else if(role === 'client'){
+    const c = LS.get('evh_dg_client', null);
+    if(fresh(c)){ clientJoin(c.code, c.name); return true; }
+  }
+  LS.del('evh_dg_role'); return false;
+}
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState !== 'visible' || !DG.role) return;
+  keepAwake();
+  if(DG.role === 'client' && (!DG.conn || !DG.conn.open)){ DG.tries = 0; clientConnect(); }
+  if(DG.role === 'host' && DG.peer && !DG.peer.destroyed && DG.peer.disconnected){ try{ DG.peer.reconnect(); }catch(e){} }
+});
+
+/* ---------- Export song links ---------- */
+function exportText(){
+  const m = LS.get('evh_matches', {}), b = builtinMatches(), lines = ['EUROSTER-LINKS v1'];
+  let n = 0;
+  allSongs().forEach(s => {
+    if(!/^\d+$/.test(s.id)) return;
+    const mt = s.key in m ? m[s.key] : b[s.key];
+    if(mt === undefined) return;
+    lines.push(s.id + ':' + (mt ? mt.id : '-')); n++;
+  });
+  return { text: lines.join('\n') + '\n', n };
+}
+function exportFile(){ const x = exportText(); return { x, file: new File([x.text], 'euroster-song-links.txt', { type: 'text/plain' }) }; }
+
 /* ---------- Start ---------- */
 (async function init(){
   if(DEMO){
@@ -3244,6 +3832,11 @@ $('#demoPending').onclick = () => showWelcome('pending');
     LS.set('evh_client', hp.get('invite')); LS.set('evh_role', 'guest'); LS.set('evh_from', hp.get('from') || '');
     history.replaceState(null, '', baseUrl());
     if(!isConnected()) showWelcome('invite');
+  } else if(hp.get('join')){
+    const code = hp.get('join').toUpperCase().slice(0, 5);
+    history.replaceState(null, '', baseUrl());
+    LS.set('evh_mode', 'digital'); $('#dgCode').value = code;
+    setTimeout(() => { dgMsg('Type your name and tap Join.'); if(!$('#dgName').value) $('#dgName').focus(); }, 50);
   } else if(location.hash === '#setup'){
     LS.set('evh_role', 'owner'); history.replaceState(null, '', baseUrl()); switchTab('settings');
   }
@@ -3257,6 +3850,8 @@ $('#demoPending').onclick = () => showWelcome('pending');
   $('#customSongs').value = LS.get('evh_custom', '');
   $('#ownerName').value = LS.get('evh_owner_name', '');
   renderTerms(); renderPlayers(); updatePlayed();
+  $('#dgName').value = LS.get('evh_dg_name', '') || LS.get('evh_owner_name', '');
+  setMode(LS.get('evh_mode', 'cards'));
   { const o = printOpts(); $('#pSize').value = o.size; $('#pFlip').value = o.flip; $('#pCut').checked = o.cut; $('#pTint').checked = o.tint; }
 
   if(!DEMO) await handleRedirect();
@@ -3268,6 +3863,7 @@ $('#demoPending').onclick = () => showWelcome('pending');
     if(isConnected()){ LS.del('evh_pending'); playTrack(pending); }
     else setMsg('Connect Spotify in Settings, then the scanned song will play.');
   }
+  if(!$('#dgCode').value) dgResume();
   if(!DEMO && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
 </script>

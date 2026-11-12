@@ -25,3 +25,8 @@ Every song has a fixed card number (0001 to 0878). The numbers are deliberately 
 that number plus the Spotify track, for example `https://m1m0har.github.io/euroster/#c=0042&t=<spotify id>`.
 Printed cards therefore play on any phone and stay valid even if you reprint. New songs added later
 get new numbers at the end (0879 onwards), so existing cards are never renumbered.
+
+## Digital game (no printed cards)
+Play tab > Digital game. One phone hosts: it needs Spotify connected and plays the music.
+Everyone else scans the host's QR code or types the 5-letter code; they don't need Spotify.
+Phones are linked through the free PeerJS service. Players without a phone can be added on the host.
